@@ -1,0 +1,51 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Main Colors from ui-spec.md */
+  --primary-purple: #9B7EFF;
+  --deep-purple: #6B4FD0;
+  --light-purple: #C4B5FD;
+  --warm-beige: #F5E6D3;
+  --gold: #FFEAA7;
+  --soft-white: #FFF9F0;
+  --text-dark: #2D2D3A;
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.15);
+  --glass-blur: blur(10px);
+  --glass-radius: 16px;
+}
+
+body {
+  font-family: 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+  background: var(--text-dark);
+  color: var(--text-dark);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Glassmorphism utility class */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}

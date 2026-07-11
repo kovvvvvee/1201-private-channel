@@ -1,0 +1,46 @@
+.bottom-nav {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  z-index: 30;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.nav-button {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 24px;
+  color: var(--soft-white);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+/* 针对更窄屏幕只调整间距，不缩小按钮 */
+@media (max-width: 375px) {
+  .bottom-nav {
+    gap: 10px;
+    padding: 0 12px;
+  }
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.nav-button:active {
+  transform: translateY(0);
+}

@@ -1,0 +1,72 @@
+.character {
+  position: absolute;
+  left: -7%;
+  top: 55%;
+  transform: translateY(-50%);
+  height: 95vh;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.character:hover {
+  animation: character-hover 0.3s ease;
+}
+
+@keyframes character-hover {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.02);
+  }
+}
+
+.dialogue-bubble {
+  position: absolute;
+  left: 33%;
+  top: 42%;
+  background: #FFFFFF;
+  padding: 12px 20px;
+  border-radius: 22px;
+  font-size: 15px;
+  color: var(--text-dark, #2D2D3A);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 20;
+  pointer-events: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(155, 126, 255, 0.3);
+  white-space: nowrap;
+  width: fit-content;
+  max-width: none;
+}
+
+.dialogue-bubble.visible {
+  opacity: 1;
+}
+
+/* 小尾巴 - 指向左下方（沈星回方向） */
+.dialogue-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 15px;
+  border-width: 12px 12px 0;
+  border-style: solid;
+  border-color: #FFFFFF transparent transparent;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.05));
+}
+
+.dialogue-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 30px;
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.9) transparent transparent;
+}
+
+.dialogue-bubble.visible {
+  opacity: 1;
+}

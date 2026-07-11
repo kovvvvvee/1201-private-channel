@@ -1,0 +1,100 @@
+/* ===== 聊天气泡样式 ===== */
+
+.message {
+  display: flex;
+  gap: 10px;
+  max-width: 80%;
+  opacity: 0;
+  animation: message-appear 0.3s ease forwards;
+}
+
+@keyframes message-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== 用户消息（靠右） ===== */
+.message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+/* ===== 沈星回消息（靠左） ===== */
+.message.ai {
+  align-self: flex-start;
+}
+
+/* ===== 头像容器 ===== */
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;           /* 确保图片裁成圆形 */
+  background: var(--primary-purple, #9B7EFF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFF9F0;
+}
+
+/* ===== 头像图片 ===== */
+.message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* 图片填满圆形，不拉伸 */
+  display: block;
+}
+
+/* ===== 用户头像背景（图片加载失败时的后备颜色） ===== */
+.message.user .message-avatar {
+  background: var(--light-purple, #D4C4FF);
+}
+
+/* ===== 消息气泡 ===== */
+.message-bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+/* ===== 用户气泡（靠右，浅紫色渐变） ===== */
+.message.user .message-bubble {
+  background: linear-gradient(135deg, #E8D9FF 0%, #D4C4FF 100%);
+  color: var(--text-dark, #2D2D3A);
+  border-bottom-right-radius: 4px;
+}
+
+/* ===== 沈星回气泡（靠左，白色+紫色边框） ===== */
+.message.ai .message-bubble {
+  background: #FFFFFF;
+  border: 2px solid var(--light-purple, #D4C4FF);
+  color: var(--text-dark, #2D2D3A);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ===== 窄屏适配 ===== */
+@media (max-width: 375px) {
+  .message {
+    max-width: 90%;
+    gap: 8px;
+  }
+
+  .message-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .message-bubble {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+}
