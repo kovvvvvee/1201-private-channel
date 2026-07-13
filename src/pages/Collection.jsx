@@ -23,69 +23,69 @@ const Collection = ({ onBack }) => {
     const loadedPhotos = [
       // 1: 实况
       {
-        photo: '/assets/photos/live/photo1.jpg',
-        video: '/assets/photos/live/photo1.mov',
+        photo: '/photos/live/photo1.jpg',
+        video: '/photos/live/photo1.mov',
         isLive: true,
-        chibi: '/assets/chibi/Q02.png',
+        chibi: '/chibi/Q02.png',
         comment: '你每次这样看过来的时候，都很难让我移开视线。'
       },
       // 2: 普通
       {
-        photo: '/assets/photos/photo2.jpg',
+        photo: '/photos/photo2.jpg',
         isLive: false,
-        chibi: '/assets/chibi/Q04.png',
+        chibi: '/chibi/Q04.png',
         comment: '已收藏'
       },
       // 3: 普通
       {
-        photo: '/assets/photos/photo3.jpg',
+        photo: '/photos/photo3.jpg',
         isLive: false,
-        chibi: '/assets/chibi/Q02.png',
+        chibi: '/chibi/Q02.png',
         comment: '这张拍糊了。不过好像刚好把那天的风留下来了'
       },
       // 4: 普通
       {
-        photo: '/assets/photos/photo4.jpg',
+        photo: '/photos/photo4.jpg',
         isLive: false,
-        chibi: '/assets/chibi/Q04.png',
+        chibi: '/chibi/Q04.png',
         comment: '装备检查完成。看起来已经准备好出来了。'
       },
       // 5: 实况 ← 多句评论（数组）
       {
-        photo: '/assets/photos/live/photo5.jpg',
-        video: '/assets/photos/live/photo5.mov',
+        photo: '/photos/live/photo5.jpg',
+        video: '/photos/live/photo5.mov',
         isLive: true,
-        chibi: '/assets/chibi/Q03.png',
+        chibi: '/chibi/Q03.png',
         comment: '离得太近了。这是准备突然袭击吗？'
       },
       // 6: 实况← 多句评论（数组）
       {
-        photo: '/assets/photos/live/photo6.jpg',
-        video: '/assets/photos/live/photo6.mov',
+        photo: '/photos/live/photo6.jpg',
+        video: '/photos/live/photo6.mov',
         isLive: true,
-        chibi: '/assets/chibi/Q01.png',
+        chibi: '/chibi/Q01.png',
         comment: ['我看到了' , '全都看到了']
       },
       // 7: 实况
       {
-        photo: '/assets/photos/live/photo7.jpg',
-        video: '/assets/photos/live/photo7.mov',
+        photo: '/photos/live/photo7.jpg',
+        video: '/photos/live/photo7.mov',
         isLive: true,
-        chibi: '/assets/chibi/Q04.png',
+        chibi: '/chibi/Q04.png',
         comment: '晚上的风有点凉。'
       },
       // 8: 普通
       {
-        photo: '/assets/photos/photo8.jpg',
+        photo: '/photos/photo8.jpg',
         isLive: false,
-        chibi: '/assets/chibi/Q03.png',
+        chibi: '/chibi/Q03.png',
         comment: '喜欢这一张。'
       },
       // 9: 普通
       {
-        photo: '/assets/photos/photo9.jpg',
+        photo: '/photos/photo9.jpg',
         isLive: false,
-        chibi: '/assets/chibi/Q01.png',
+        chibi: '/chibi/Q01.png',
         comment: '我保存下来了。'
       }
     ];
@@ -349,7 +349,7 @@ const Collection = ({ onBack }) => {
   // ===== Q版 =====
   const getChibiImage = () => {
     const currentPhoto = photos[currentIndex];
-    return currentPhoto?.chibi || '/assets/chibi/Q01.png';
+    return currentPhoto?.chibi || '/chibi/Q01.png';
   };
 
   // ===== 渲染 =====

@@ -4,7 +4,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: url('/assets/chat/chat-bg.jpg') center/cover no-repeat;
+  background: url('/chat/chat-bg.jpg') center/cover no-repeat;
   position: relative;
 }
 

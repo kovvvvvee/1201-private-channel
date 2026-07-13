@@ -16,7 +16,7 @@ const Message = ({ onBack }) => {
 
   // 初始化音频并立即播放
   useEffect(() => {
-    const audio = new Audio('/assets/audio/bgm.mp3');
+    const audio = new Audio('/audio/bgm.mp3');
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
@@ -84,7 +84,7 @@ const Message = ({ onBack }) => {
         </div>
         {showEnvelope && (
           <div className="envelope-container visible" onClick={handleEnvelopeClick}>
-            <img src="/assets/letter/envelope.png" alt="信封" className="envelope-image" />
+            <img src="/letter/envelope.png" alt="信封" className="envelope-image" />
           </div>
         )}
       </div>

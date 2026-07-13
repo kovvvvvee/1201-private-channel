@@ -43,7 +43,7 @@ const LaunchAnimation = ({ onComplete }) => {
     <div className="launch-screen">
       {showIcon && (
         <img
-          src="/assets/icons/xinghui-start.png"
+          src="/icons/xinghui-start.png"
           alt="Start"
           className="start-icon"
           onClick={handleStart}

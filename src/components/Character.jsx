@@ -124,7 +124,7 @@ const Character = ({ onDialogue }) => {
 
   return (
     <img
-      src="/assets/character/xinghui-home.png"
+      src="/character/xinghui-home.png"
       alt="沈星回"
       className="character"
       onClick={handleClick}

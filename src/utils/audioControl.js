@@ -2,7 +2,7 @@
 export const audioControl = {
   // 播放生日快乐语音
   playBirthday: () => {
-    const audio = new Audio('/assets/audio/birthday.mp3');
+    const audio = new Audio('/audio/birthday.mp3');
     audio.play().catch(error => {
       console.error('Audio play failed:', error);
     });

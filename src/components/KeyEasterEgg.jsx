@@ -27,7 +27,7 @@ const KeyEasterEgg = () => {
       className={`hidden-key ${isBlinking ? 'blinking' : ''}`}
       onClick={handleClick}
     >
-      <img src="/assets/icons/key.png" alt="钥匙" />
+      <img src="/icons/key.png" alt="钥匙" />
     </div>
   );
 };
