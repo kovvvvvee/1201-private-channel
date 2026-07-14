@@ -911,6 +911,9 @@ const Chat = ({ onBack }) => {
         { role: 'user', content: userMessage }
       ];
 
+      console.log("发送给AI的第一条:", apiMessages[0]);
+console.log("消息总数:", apiMessages.length);
+
       // 调用后端 API
       const response = await fetch('/api/chat', {
         method: 'POST',
