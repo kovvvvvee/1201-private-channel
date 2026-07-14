@@ -1,3 +1,7 @@
+const dotenv = require('dotenv');
+dotenv.config({ path: './.env' });
+console.log('📁 加载的 API Key:', process.env.DEEPSEEK_API_KEY ? '✅ 已加载' : '❌ 未加载');
+
 const express = require('express');
 const cors = require('cors');
 const OpenAI = require('openai');
