@@ -1,6 +1,10 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
 
+  // Debug 日志
+  console.log("KEY存在:", !!env.DEEPSEEK_API_KEY);
+  console.log("MODEL:", env.DEEPSEEK_MODEL);
+
   // 设置 SSE 响应头
   const headers = new Headers({
     'Content-Type': 'text/event-stream',
@@ -27,7 +31,10 @@ export async function onRequestPost(context) {
     });
 
     if (!response.ok) {
-      throw new Error(`DeepSeek API Error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('DeepSeek API Error Status:', response.status);
+      console.error('DeepSeek API Error Body:', errorText);
+      throw new Error(`DeepSeek API Error: ${response.status} - ${errorText}`);
     }
 
     // 创建可读流
