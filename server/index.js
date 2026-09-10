@@ -36,9 +36,9 @@ app.post('/api/chat', async (req, res) => {
         const { messages } = req.body;
 
         // 调用 DeepSeek API（流式）
-        // 模型从环境变量读取，默认使用 deepseek-flash
+        // 模型从环境变量读取，默认使用 deepseek-v4-flash
         const stream = await client.chat.completions.create({
-            model: process.env.DEEPSEEK_MODEL || 'deepseek-flash',
+            model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
             messages: messages,
             stream: true,
         });
@@ -63,7 +63,7 @@ app.post('/api/chat', async (req, res) => {
 app.get('/api/test', async (req, res) => {
   try {
     const response = await client.chat.completions.create({
-      model: process.env.DEEPSEEK_MODEL || 'deepseek-flash',
+      model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
       messages: [{ role: 'user', content: '请回复"OK"表示你正常工作' }],
     });
     res.json({
