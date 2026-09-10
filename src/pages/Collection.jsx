@@ -8,7 +8,7 @@ const Collection = ({ onBack }) => {
   const [companionText, setCompanionText] = useState('');
   const [commentIndex, setCommentIndex] = useState(0);
   const containerRef = useRef(null);
-  const cardsRef = useRef([]);
+  const cardRefs = useRef([]);
   const videoRefs = useRef({});
   const isAnimating = useRef(false);
   const currentIndexRef = useRef(0);
@@ -128,115 +128,10 @@ const Collection = ({ onBack }) => {
     };
   }, [currentIndex, photos]);
 
-  // ===== 初始化卡片堆叠（使用 video 实况） =====
+  // ===== 初始化视频引用和触摸事件 =====
   useEffect(() => {
-    if (photos.length === 0) return;
     const container = containerRef.current;
     if (!container) return;
-
-    container.innerHTML = '';
-    cardsRef.current = [];
-    videoRefs.current = {};
-
-    photos.forEach((item, i) => {
-      const card = document.createElement('div');
-      card.className = 'photo-card';
-      card.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                    opacity 0.4s ease;
-        pointer-events: none;
-        user-select: none;
-        -webkit-user-drag: none;
-        will-change: transform;
-        backface-visibility: hidden;
-      `;
-
-      const mediaContainer = document.createElement('div');
-      mediaContainer.className = 'media-container';
-      mediaContainer.style.cssText = `
-        width: 100%;
-        height: 100%;
-        position: relative;
-      `;
-      card.appendChild(mediaContainer);
-      container.appendChild(card);
-      cardsRef.current.push(card);
-
-      if (item.isLive) {
-        const video = document.createElement('video');
-        video.preload = 'none';
-        video.src = item.video;
-        video.poster = item.photo;
-        video.muted = true;
-        video.playsInline = true;
-        video.loop = true;
-        video.style.cssText = `
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          position: absolute;
-          top: 0;
-          left: 0;
-        `;
-        video.onerror = function() {
-          const fallbackImg = document.createElement('img');
-          fallbackImg.src = item.photo;
-          fallbackImg.alt = `照片${i+1}`;
-          fallbackImg.style.cssText = `
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-          `;
-          mediaContainer.appendChild(fallbackImg);
-        };
-        mediaContainer.appendChild(video);
-        videoRefs.current[i] = video;
-      } else {
-        const img = document.createElement('img');
-        img.src = item.photo;
-        img.alt = `照片${i+1}`;
-        img.style.cssText = `
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        `;
-        mediaContainer.appendChild(img);
-      }
-    });
-
-    const total = photos.length;
-    currentIndexRef.current = 0;
-    cardsRef.current.forEach((card, i) => {
-      if (i === 0) {
-        card.style.transform = 'translateX(0) scale(1)';
-        card.style.opacity = '1';
-        card.style.zIndex = total + 10;
-      } else {
-        card.style.transform = 'translateX(0) scale(0.92)';
-        card.style.opacity = '0';
-        card.style.zIndex = total - i;
-      }
-    });
-    setCurrentIndex(0);
-
-    setTimeout(() => {
-      const firstVideo = videoRefs.current[0];
-      if (firstVideo) {
-        firstVideo.load();
-        firstVideo.play().catch(() => {});
-      }
-    }, 500);
 
     const handleTouchStart = (e) => {
       container._touchStartX = e.touches[0].clientX;
@@ -259,6 +154,21 @@ const Collection = ({ onBack }) => {
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
     };
+  }, []);
+
+  // ===== 初始化第一个视频播放 =====
+  useEffect(() => {
+    if (photos.length === 0) return;
+    currentIndexRef.current = 0;
+    setCurrentIndex(0);
+
+    setTimeout(() => {
+      const firstVideo = videoRefs.current[0];
+      if (firstVideo) {
+        firstVideo.load();
+        firstVideo.play().catch(() => {});
+      }
+    }, 500);
   }, [photos]);
 
   // ===== 切换函数 =====
@@ -270,26 +180,30 @@ const Collection = ({ onBack }) => {
     isAnimating.current = true;
 
     const dir = direction || (index > prev ? 1 : -1);
-    const cards = cardsRef.current;
+    const cards = cardRefs.current;
     const total = photos.length;
 
-    cards[prev].style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease';
-    cards[prev].style.transform = `translateX(${-100 * dir}%) scale(0.9)`;
-    cards[prev].style.opacity = '0';
-    cards[prev].style.zIndex = total - prev;
+    if (cards[prev]) {
+      cards[prev].style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease';
+      cards[prev].style.transform = `translateX(${-100 * dir}%) scale(0.9)`;
+      cards[prev].style.opacity = '0';
+      cards[prev].style.zIndex = total - prev;
+    }
 
-    cards[index].style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease';
-    cards[index].style.transform = `translateX(${100 * dir}%) scale(0.95)`;
-    cards[index].style.opacity = '0.8';
-    cards[index].style.zIndex = total + 10;
+    if (cards[index]) {
+      cards[index].style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease';
+      cards[index].style.transform = `translateX(${100 * dir}%) scale(0.95)`;
+      cards[index].style.opacity = '0.8';
+      cards[index].style.zIndex = total + 10;
 
-    requestAnimationFrame(() => {
-      cards[index].style.transform = 'translateX(0) scale(1)';
-      cards[index].style.opacity = '1';
-    });
+      requestAnimationFrame(() => {
+        cards[index].style.transform = 'translateX(0) scale(1)';
+        cards[index].style.opacity = '1';
+      });
+    }
 
     cards.forEach((card, i) => {
-      if (i !== prev && i !== index) {
+      if (card && i !== prev && i !== index) {
         card.style.transition = 'opacity 0.2s ease';
         card.style.opacity = '0';
         card.style.transform = 'scale(0.92)';
@@ -321,7 +235,9 @@ const Collection = ({ onBack }) => {
 
     setTimeout(() => {
       cards.forEach(card => {
-        card.style.transition = '';
+        if (card) {
+          card.style.transition = '';
+        }
       });
       isAnimating.current = false;
     }, 450);
@@ -369,7 +285,95 @@ const Collection = ({ onBack }) => {
             className="photo-container"
             ref={containerRef}
             style={{ touchAction: 'none' }}
-          />
+          >
+            {photos.map((item, i) => {
+              const total = photos.length;
+              const isCurrent = i === currentIndex;
+              const isPrev = i === currentIndexRef.current;
+              
+              let transformStyle = 'translateX(0) scale(0.92)';
+              let opacityStyle = '0';
+              let zIndexStyle = total - i;
+              
+              if (isCurrent) {
+                transformStyle = 'translateX(0) scale(1)';
+                opacityStyle = '1';
+                zIndexStyle = total + 10;
+              }
+              
+              return (
+                <div
+                  key={i}
+                  ref={el => cardRefs.current[i] = el}
+                  className="photo-card"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                    transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                    WebkitUserDrag: 'none',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    transform: transformStyle,
+                    opacity: opacityStyle,
+                    zIndex: zIndexStyle,
+                  }}
+                >
+                  <div
+                    className="media-container"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    {item.isLive ? (
+                      <>
+                        <video
+                          ref={el => videoRefs.current[i] = el}
+                          preload="none"
+                          src={item.video}
+                          poster={item.photo}
+                          muted
+                          playsInline
+                          loop
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <img
+                        src={item.photo}
+                        alt={`照片${i + 1}`}
+                        onError={(e) => {
+                          console.error(`Failed to load image: ${item.photo}`);
+                          e.target.style.display = 'none';
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="chibi-area">
