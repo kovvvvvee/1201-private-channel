@@ -374,6 +374,7 @@ const Collection = ({ onBack }) => {
 
         <div className="chibi-area">
           <img
+            key={getChibiImage()}
             src={getChibiImage()}
             alt="Q版沈星回"
             className={`chibi-character ${isSwitching ? 'switching' : ''}`}
