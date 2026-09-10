@@ -24,7 +24,7 @@ const Collection = ({ onBack }) => {
       // 1: 实况
       {
         photo: '/photos/live/photo1.jpg',
-        video: '/photos/live/photo1.mov',
+        video: '/photos/live/photo1.MOV',
         isLive: true,
         chibi: '/chibi/Q02.png',
         comment: '你每次这样看过来的时候，都很难让我移开视线。'
@@ -53,7 +53,7 @@ const Collection = ({ onBack }) => {
       // 5: 实况 ← 多句评论（数组）
       {
         photo: '/photos/live/photo5.jpg',
-        video: '/photos/live/photo5.mov',
+        video: '/photos/live/photo5.MOV',
         isLive: true,
         chibi: '/chibi/Q03.png',
         comment: '离得太近了。这是准备突然袭击吗？'
@@ -61,7 +61,7 @@ const Collection = ({ onBack }) => {
       // 6: 实况← 多句评论（数组）
       {
         photo: '/photos/live/photo6.jpg',
-        video: '/photos/live/photo6.mov',
+        video: '/photos/live/photo6.MOV',
         isLive: true,
         chibi: '/chibi/Q01.png',
         comment: ['我看到了' , '全都看到了']
@@ -69,7 +69,7 @@ const Collection = ({ onBack }) => {
       // 7: 实况
       {
         photo: '/photos/live/photo7.jpg',
-        video: '/photos/live/photo7.mov',
+        video: '/photos/live/photo7.MOV',
         isLive: true,
         chibi: '/chibi/Q04.png',
         comment: '晚上的风有点凉。'
@@ -233,6 +233,7 @@ const Collection = ({ onBack }) => {
     setTimeout(() => {
       const firstVideo = videoRefs.current[0];
       if (firstVideo) {
+        firstVideo.load();
         firstVideo.play().catch(() => {});
       }
     }, 500);
@@ -313,6 +314,7 @@ const Collection = ({ onBack }) => {
       });
       const currentVideo = videoRefs.current[index];
       if (currentVideo) {
+        currentVideo.load();
         currentVideo.play().catch(() => {});
       }
     }, 500);
