@@ -431,18 +431,19 @@ const Collection = ({ onBack }) => {
     const randomCompanion = companionMessages[Math.floor(Math.random() * companionMessages.length)];
     setCompanionText(randomCompanion);
 
-    setTimeout(() => {
-      Object.values(videoRefs.current).forEach(video => {
-        if (video) {
-          video.pause();
-        }
-      });
-      const currentVideo = videoRefs.current[index];
-      if (currentVideo) {
-        currentVideo.load();
-        currentVideo.play().catch(() => {});
-      }
-    }, 500);
+ setTimeout(() => {
+  const currentVideo = videoRefs.current[index];
+
+  Object.values(videoRefs.current).forEach((video) => {
+    if (!video) return;
+
+    if (video === currentVideo) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  });
+}, 500);
 
     setTimeout(() => {
       cards.forEach(card => {
