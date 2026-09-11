@@ -185,8 +185,6 @@ const Collection = ({ onBack }) => {
         pointer-events: none;
         user-select: none;
         -webkit-user-drag: none;
-        will-change: transform;
-        backface-visibility: hidden;
       `;
 
       const mediaContainer = document.createElement('div');
