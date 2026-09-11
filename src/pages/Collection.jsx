@@ -200,7 +200,7 @@ const Collection = ({ onBack }) => {
 
       if (item.isLive) {
         const video = document.createElement('video');
-        video.preload = 'none';
+        video.preload = 'auto';
         video.src = item.video;
         video.poster = item.photo;
         video.muted = true;
