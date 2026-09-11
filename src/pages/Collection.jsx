@@ -7,12 +7,24 @@ const Collection = ({ onBack }) => {
   const [isSwitching, setIsSwitching] = useState(false);
   const [companionText, setCompanionText] = useState('');
   const [commentIndex, setCommentIndex] = useState(0);
+  const [debugLogs, setDebugLogs] = useState([]);
+  const [showDebug, setShowDebug] = useState(false);
   const containerRef = useRef(null);
   const cardsRef = useRef([]);
   const videoRefs = useRef({});
   const isAnimating = useRef(false);
   const currentIndexRef = useRef(0);
   const commentTimerRef = useRef(null);
+
+  const addDebugLog = (type, data) => {
+    const log = {
+      type,
+      time: new Date().toISOString(),
+      ...data
+    };
+    setDebugLogs(prev => [...prev.slice(-99), log]);
+    console.log(`[Collection ${type}]`, data);
+  };
 
   const companionMessages = [
     "继续往后看吧。"
@@ -139,10 +151,19 @@ const Collection = ({ onBack }) => {
 
   // ===== 初始化卡片堆叠（使用 video 实况） =====
   useEffect(() => {
-    if (photos.length === 0) return;
     const container = containerRef.current;
+    addDebugLog('EFFECT START', {
+      photosLength: photos.length,
+      currentIndex: currentIndexRef.current,
+      containerExists: !!container,
+      childCount: container ? container.children.length : -1
+    });
+    if (photos.length === 0) return;
     if (!container) return;
 
+    addDebugLog('clearing container', {
+      childCountBeforeClear: container.children.length
+    });
     container.innerHTML = '';
     cardsRef.current = [];
     videoRefs.current = {};
@@ -195,20 +216,34 @@ const Collection = ({ onBack }) => {
           top: 0;
           left: 0;
         `;
-        video.onerror = function() {
-          const fallbackImg = document.createElement('img');
-          fallbackImg.src = item.photo;
-          fallbackImg.alt = `照片${i+1}`;
-          fallbackImg.style.cssText = `
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-          `;
-          mediaContainer.appendChild(fallbackImg);
-        };
+        addDebugLog('VIDEO created', { src: video.src, index: i });
+        video.addEventListener('loadeddata', function() {
+          addDebugLog('VIDEO LOADEDDATA', {
+            src: video.src,
+            readyState: video.readyState,
+            connected: video.isConnected
+          });
+        });
+        video.addEventListener('error', function() {
+          addDebugLog('VIDEO ERROR', {
+            src: video.src,
+            readyState: video.readyState,
+            connected: video.isConnected,
+            error: video.error
+          });
+        });
+        video.addEventListener('play', function() {
+          addDebugLog('VIDEO PLAY', {
+            src: video.src,
+            connected: video.isConnected
+          });
+        });
+        video.addEventListener('pause', function() {
+          addDebugLog('VIDEO PAUSE', {
+            src: video.src,
+            connected: video.isConnected
+          });
+        });
         mediaContainer.appendChild(video);
         videoRefs.current[i] = video;
       } else {
@@ -220,8 +255,29 @@ const Collection = ({ onBack }) => {
           height: 100%;
           object-fit: cover;
         `;
+        addDebugLog('IMG created', { src: img.src, index: i });
+        img.onload = function() {
+          addDebugLog('IMG LOAD', {
+            src: img.src,
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+            connected: img.isConnected
+          });
+        };
+        img.onerror = function() {
+          addDebugLog('IMG ERROR', {
+            src: img.src,
+            connected: img.isConnected
+          });
+        };
         mediaContainer.appendChild(img);
       }
+    });
+
+    addDebugLog('CARDS CREATED', {
+      cardCount: cardsRef.current.length,
+      containerChildCount: container.children.length,
+      currentIndex: currentIndexRef.current
     });
 
     const total = photos.length;
@@ -229,10 +285,24 @@ const Collection = ({ onBack }) => {
     cardsRef.current.forEach((card, i) => {
       if (i === 0) {
         card.style.transform = 'translateX(0) scale(1)';
+        addDebugLog('OPACITY SET', {
+          phase: 'initial',
+          index: i,
+          opacity: '1',
+          currentIndex,
+          connected: card.isConnected
+        });
         card.style.opacity = '1';
         card.style.zIndex = total + 10;
       } else {
         card.style.transform = 'translateX(0) scale(0.92)';
+        addDebugLog('OPACITY SET', {
+          phase: 'initial',
+          index: i,
+          opacity: '0',
+          currentIndex,
+          connected: card.isConnected
+        });
         card.style.opacity = '0';
         card.style.zIndex = total - i;
       }
@@ -246,6 +316,12 @@ const Collection = ({ onBack }) => {
         firstVideo.play().catch(() => {});
       }
     }, 500);
+
+    addDebugLog('EFFECT END', {
+      cardCount: cardsRef.current.length,
+      containerChildCount: container.children.length,
+      currentIndex: currentIndexRef.current
+    });
 
     const handleTouchStart = (e) => {
       container._touchStartX = e.touches[0].clientX;
@@ -265,6 +341,13 @@ const Collection = ({ onBack }) => {
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
+      addDebugLog('EFFECT CLEANUP', {
+        photosLength: photos.length,
+        currentIndex: currentIndexRef.current,
+        containerExists: !!container,
+        childCount: container ? container.children.length : -1,
+        time: new Date().toISOString()
+      });
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
     };
@@ -272,6 +355,13 @@ const Collection = ({ onBack }) => {
 
   // ===== 切换函数 =====
   const goTo = (index, direction) => {
+    const stack = new Error().stack;
+    addDebugLog('goTo CALLED', {
+      index,
+      direction,
+      currentIndex: currentIndexRef.current,
+      stack
+    });
     if (isAnimating.current) return;
     if (index < 0 || index >= photos.length) return;
     const prev = currentIndexRef.current;
@@ -284,22 +374,50 @@ const Collection = ({ onBack }) => {
 
     cards[prev].style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease';
     cards[prev].style.transform = `translateX(${-100 * dir}%) scale(0.9)`;
+    addDebugLog('OPACITY SET', {
+      phase: 'switch-prev',
+      index: prev,
+      opacity: '0',
+      currentIndex,
+      connected: cards[prev]?.isConnected
+    });
     cards[prev].style.opacity = '0';
     cards[prev].style.zIndex = total - prev;
 
     cards[index].style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease';
     cards[index].style.transform = `translateX(${100 * dir}%) scale(0.95)`;
+    addDebugLog('OPACITY SET', {
+      phase: 'switch-current',
+      index,
+      opacity: '0.8',
+      currentIndex,
+      connected: cards[index]?.isConnected
+    });
     cards[index].style.opacity = '0.8';
     cards[index].style.zIndex = total + 10;
 
     requestAnimationFrame(() => {
       cards[index].style.transform = 'translateX(0) scale(1)';
+      addDebugLog('OPACITY SET', {
+        phase: 'switch-current-final',
+        index,
+        opacity: '1',
+        currentIndex,
+        connected: cards[index]?.isConnected
+      });
       cards[index].style.opacity = '1';
     });
 
     cards.forEach((card, i) => {
       if (i !== prev && i !== index) {
         card.style.transition = 'opacity 0.2s ease';
+        addDebugLog('OPACITY SET', {
+          phase: 'switch-other',
+          index: cards.indexOf(card),
+          opacity: '0',
+          currentIndex,
+          connected: card.isConnected
+        });
         card.style.opacity = '0';
         card.style.transform = 'scale(0.92)';
         card.style.zIndex = total - i;
@@ -370,7 +488,78 @@ const Collection = ({ onBack }) => {
       <div className="page-header">
         <button className="back-button" onClick={onBack}>←</button>
         <div className="page-title">收藏夹</div>
+        <button 
+          className="debug-button" 
+          onClick={() => setShowDebug(!showDebug)}
+          style={{
+            position: 'absolute',
+            right: '10px',
+            top: '10px',
+            fontSize: '10px',
+            padding: '4px 8px',
+            background: 'rgba(0,0,0,0.3)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            zIndex: 1000
+          }}
+        >
+          DEBUG
+        </button>
       </div>
+
+      {showDebug && (
+        <div 
+          className="debug-panel"
+          style={{
+            position: 'fixed',
+            top: '60px',
+            right: '10px',
+            width: '280px',
+            maxHeight: '400px',
+            background: 'rgba(0,0,0,0.85)',
+            color: '#0f0',
+            fontSize: '10px',
+            padding: '8px',
+            borderRadius: '8px',
+            overflowY: 'auto',
+            zIndex: 9999,
+            fontFamily: 'monospace',
+            border: '1px solid #0f0'
+          }}
+        >
+          <div style={{ marginBottom: '8px', fontWeight: 'bold', color: '#fff' }}>
+            Debug Logs ({debugLogs.length})
+          </div>
+          {debugLogs.slice().reverse().map((log, i) => (
+            <div 
+              key={i} 
+              style={{ 
+                marginBottom: '4px', 
+                paddingBottom: '4px',
+                borderBottom: '1px solid #333',
+                fontSize: '9px'
+              }}
+            >
+              <div style={{ color: '#888' }}>
+                [{log.time.slice(11, 19)}] {log.type}
+              </div>
+              {log.index !== undefined && <div>index: {log.index}</div>}
+              {log.src && <div>src: {log.src}</div>}
+              {log.opacity !== undefined && <div>opacity: {log.opacity}</div>}
+              {log.phase && <div>phase: {log.phase}</div>}
+              {log.currentIndex !== undefined && <div>currentIndex: {log.currentIndex}</div>}
+              {log.connected !== undefined && <div>connected: {log.connected}</div>}
+              {log.photosLength !== undefined && <div>photosLength: {log.photosLength}</div>}
+              {log.childCountBeforeClear !== undefined && <div>childCountBeforeClear: {log.childCountBeforeClear}</div>}
+              {log.readyState !== undefined && <div>readyState: {log.readyState}</div>}
+              {log.width !== undefined && <div>width: {log.width}</div>}
+              {log.height !== undefined && <div>height: {log.height}</div>}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="collection-content">
         <div className="photo-area">
