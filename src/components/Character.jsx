@@ -127,6 +127,7 @@ const Character = ({ onDialogue }) => {
       src="/character/xinghui-home.png"
       alt="沈星回"
       className="character"
+      loading="eager"
       onClick={handleClick}
     />
   );

@@ -18,6 +18,15 @@ const Collection = ({ onBack }) => {
     "继续往后看吧。"
   ];
 
+  // ===== 预加载 Q版图片 =====
+  useEffect(() => {
+    const chibiImages = ['/chibi/Q01.png', '/chibi/Q02.png', '/chibi/Q03.png', '/chibi/Q04.png'];
+    chibiImages.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   // ===== 加载照片（每张照片单独配置 chibi + comment） =====
   useEffect(() => {
     const loadedPhotos = [
