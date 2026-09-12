@@ -237,7 +237,6 @@ const Collection = ({ onBack }) => {
     const initialPlayTimer = setTimeout(() => {
       const firstVideo = videoRefs.current[0];
       if (firstVideo) {
-        firstVideo.load();
         firstVideo.play().catch(() => {});
       }
     }, 500);
@@ -262,10 +261,21 @@ const Collection = ({ onBack }) => {
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      clearTimeout(initialPlayTimer);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
+  clearTimeout(initialPlayTimer);
+
+  Object.values(videoRefs.current).forEach((video) => {
+    if (!video) return;
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  });
+
+  container.removeEventListener('touchstart', handleTouchStart);
+  container.removeEventListener('touchend', handleTouchEnd);
+
+  cardsRef.current = [];
+  videoRefs.current = {};
+};
   }, [photos]);
 
   // ===== 切换函数 =====
