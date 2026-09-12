@@ -156,7 +156,7 @@ const Collection = ({ onBack }) => {
       card.style.cssText = `
         position: absolute;
         top: 0;
-        leftadd: 0;
+        left: 0;
         width: 100%;
         height: 100%;
         border-radius: 16px;
@@ -221,9 +221,13 @@ const Collection = ({ onBack }) => {
         
         card.style.opacity = '1';
         card.style.zIndex = total + 10;
+      } else if (i === 1) {
+        card.style.transform = 'translateX(12px) scale(0.92)';
+        card.style.opacity = '1';
+        card.style.zIndex = total + 9;
+        card.style.backgroundColor = 'red';
       } else {
-        card.style.transform = 'translateX(0) scale(0.92)';
-       
+        card.style.transform = 'transLateX(0) scale(0.92)';
         card.style.opacity = '0';
         card.style.zIndex = total - i;
       }
