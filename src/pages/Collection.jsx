@@ -228,7 +228,7 @@ const Collection = ({ onBack }) => {
     });
     setCurrentIndex(0);
 
-    setTimeout(() => {
+    const initialPlayTimer = setTimeout(() => {
       const firstVideo = videoRefs.current[0];
       if (firstVideo) {
         firstVideo.load();
@@ -256,7 +256,7 @@ const Collection = ({ onBack }) => {
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-   
+      clearTimeout(initialPlayTimer);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
     };
