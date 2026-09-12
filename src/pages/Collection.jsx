@@ -140,15 +140,21 @@ const Collection = ({ onBack }) => {
 
   // ===== 初始化卡片堆叠（使用 video 实况） =====
   useEffect(() => {
-    const container = containerRef.current;
-    
-    if (photos.length === 0) return;
-    if (!container) return;
+  const container = containerRef.current;
 
-    
-    container.innerHTML = '';
-    cardsRef.current = [];
-    videoRefs.current = {};
+  if (photos.length === 0) return;
+  if (!container) return;
+
+  Object.values(videoRefs.current).forEach((video) => {
+    if (!video) return;
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  });
+
+  container.innerHTML = '';
+  cardsRef.current = [];
+  videoRefs.current = {};
 
     photos.forEach((item, i) => {
       const card = document.createElement('div');
