@@ -312,7 +312,6 @@ const Collection = ({ onBack }) => {
     const randomCompanion = companionMessages[Math.floor(Math.random() * companionMessages.length)];
     setCompanionText(randomCompanion);
 
- setTimeout(() => {
   const currentVideo = videoRefs.current[index];
 
   Object.values(videoRefs.current).forEach((video) => {
@@ -324,7 +323,7 @@ const Collection = ({ onBack }) => {
       video.pause();
     }
   });
-}, 500);
+
 
     setTimeout(() => {
       cards.forEach(card => {
