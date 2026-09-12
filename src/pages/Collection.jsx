@@ -218,16 +218,10 @@ const Collection = ({ onBack }) => {
     cardsRef.current.forEach((card, i) => {
       if (i === 0) {
         card.style.transform = 'translateX(0) scale(1)';
-        
         card.style.opacity = '1';
         card.style.zIndex = total + 10;
-      } else if (i === 1) {
-        card.style.transform = 'translateX(12px) scale(0.92)';
-        card.style.opacity = '1';
-        card.style.zIndex = total + 9;
-        card.style.backgroundColor = 'red';
       } else {
-        card.style.transform = 'transLateX(0) scale(0.92)';
+        card.style.transform = 'translateX(0) scale(0.92)';
         card.style.opacity = '0';
         card.style.zIndex = total - i;
       }
