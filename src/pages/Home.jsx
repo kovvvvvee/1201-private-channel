@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { storage } from '../utils/storage';
 import Character from '../components/Character';
 import BottomNav from '../components/BottomNav';
@@ -10,11 +10,19 @@ import '../styles/bottomNav.css';
 const Home = ({ onNavigate }) => {
   const [dialogue, setDialogue] = useState('');
   const [showDialogue, setShowDialogue] = useState(false);
+  const dialogueTimerRef = useRef(null);
 
   const handleDialogue = (text) => {
     setDialogue(text);
     setShowDialogue(true);
-    setTimeout(() => {
+    
+    // 清除之前的定时器
+    if (dialogueTimerRef.current) {
+      clearTimeout(dialogueTimerRef.current);
+    }
+    
+    // 设置新的定时器
+    dialogueTimerRef.current = setTimeout(() => {
       setShowDialogue(false);
     }, 5000);
   };
