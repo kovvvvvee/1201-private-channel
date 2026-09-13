@@ -14,6 +14,12 @@ const Message = ({ onBack }) => {
     "好像……是给你的。"
   ];
 
+  // 预加载背景图
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/letter/message-bg.jpg';
+  }, []);
+
   // 初始化音频并立即播放
   useEffect(() => {
     const audio = new Audio('/audio/bgm.mp3');
