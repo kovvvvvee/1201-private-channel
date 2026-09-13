@@ -382,6 +382,11 @@ const Collection = ({ onBack }) => {
     }
   });
 
+  const preloadIndex = (index + 1) % photos.length;
+  if (photos[preloadIndex] && photos[preloadIndex].isLive) {
+    createVideoForCard(preloadIndex);
+  }
+
 
     setTimeout(() => {
       cards.forEach(card => {
