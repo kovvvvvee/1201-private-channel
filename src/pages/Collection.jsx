@@ -138,6 +138,49 @@ const Collection = ({ onBack }) => {
     };
   }, [currentIndex, photos]);
 
+  // ===== 辅助函数：为指定 live 卡片创建 video =====
+  const createVideoForCard = (index) => {
+    if (videoRefs.current[index]) {
+      return videoRefs.current[index];
+    }
+
+    const item = photos[index];
+    if (!item || !item.isLive) {
+      return null;
+    }
+
+    const card = cardsRef.current[index];
+    if (!card) {
+      return null;
+    }
+
+    const mediaContainer = card.querySelector('.media-container');
+    if (!mediaContainer) {
+      return null;
+    }
+
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.src = item.video;
+    video.poster = item.photo;
+    video.muted = true;
+    video.playsInline = true;
+    video.loop = true;
+    video.style.cssText = `
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+    `;
+
+    mediaContainer.appendChild(video);
+    videoRefs.current[index] = video;
+
+    return video;
+  };
+
   // ===== 初始化卡片堆叠（使用 video 实况） =====
   useEffect(() => {
   const container = containerRef.current;
@@ -187,24 +230,15 @@ const Collection = ({ onBack }) => {
       cardsRef.current.push(card);
 
       if (item.isLive) {
-        const video = document.createElement('video');
-        video.preload = 'auto';
-        video.src = item.video;
-        video.poster = item.photo;
-        video.muted = true;
-        video.playsInline = true;
-        video.loop = true;
-        video.style.cssText = `
+        const img = document.createElement('img');
+        img.src = item.photo;
+        img.alt = `照片${i+1}`;
+        img.style.cssText = `
           width: 100%;
           height: 100%;
           object-fit: cover;
-          position: absolute;
-          top: 0;
-          left: 0;
         `;
-
-        mediaContainer.appendChild(video);
-        videoRefs.current[i] = video;
+        mediaContainer.appendChild(img);
       } else {
         const img = document.createElement('img');
         img.src = item.photo;
@@ -235,9 +269,12 @@ const Collection = ({ onBack }) => {
     setCurrentIndex(0);
 
     const initialPlayTimer = setTimeout(() => {
-      const firstVideo = videoRefs.current[0];
-      if (firstVideo) {
-        firstVideo.play().catch(() => {});
+      const firstPhoto = photos[0];
+      if (firstPhoto && firstPhoto.isLive) {
+        const firstVideo = createVideoForCard(0);
+        if (firstVideo) {
+          firstVideo.play().catch(() => {});
+        }
       }
     }, 500);
 
@@ -328,7 +365,12 @@ const Collection = ({ onBack }) => {
     const randomCompanion = companionMessages[Math.floor(Math.random() * companionMessages.length)];
     setCompanionText(randomCompanion);
 
-  const currentVideo = videoRefs.current[index];
+  const currentPhoto = photos[index];
+  let currentVideo = videoRefs.current[index];
+
+  if (currentPhoto && currentPhoto.isLive && !currentVideo) {
+    currentVideo = createVideoForCard(index);
+  }
 
   Object.values(videoRefs.current).forEach((video) => {
     if (!video) return;
