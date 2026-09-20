@@ -1098,6 +1098,7 @@ addNextSentence();
           <div className="remaining-badge">📡 0</div>
         </div>
         <div className="chat-area" ref={chatAreaRef}>
+          CHAT AREA TEST
           {messages.map((msg, index) => (
             <ChatBubble key={index} message={msg.text} type={msg.type} />
           ))}
@@ -1106,6 +1107,7 @@ addNextSentence();
           )}
         </div>
         <div className="chat-input-area">
+          INPUT AREA TEST
           <input
             type="text"
             className="chat-input"
@@ -1140,6 +1142,7 @@ addNextSentence();
         </div>
       </div>
       <div className="chat-area" ref={chatAreaRef}>
+        CHAT AREA TEST
         {messages.map((msg, index) => (
           <ChatBubble key={index} message={msg.text} type={msg.type} />
         ))}
@@ -1156,6 +1159,7 @@ addNextSentence();
         )}
       </div>
       <div className="chat-input-area">
+        INPUT AREA TEST
         <input
           type="text"
           className="chat-input"
