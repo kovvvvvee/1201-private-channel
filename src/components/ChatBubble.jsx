@@ -4,7 +4,7 @@ const ChatBubble = ({ message, type, delay = 0 }) => {
   const isUser = type === 'user';
 
   return (
-    <div className={`message ${type}`} style={{ animationDelay: `${delay}ms` }}>
+    <div className={`message ${type}`}>
       <div className="message-avatar">
         {isUser ? (
           <img src="/avatars/user-avatar.png" alt="我" />
