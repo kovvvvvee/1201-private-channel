@@ -121,6 +121,11 @@
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+  height: 80px !important;
+  min-height: 80px !important;
+  box-sizing: border-box;
+  border: 5px solid red !important;
+  background: rgba(255, 0, 0, 0.5) !important;
 }
 
 .chat-input {
