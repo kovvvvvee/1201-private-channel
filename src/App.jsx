@@ -13,15 +13,21 @@ function AppContent() {
 
   const handleLaunchComplete = () => {
     setShowLaunch(false);
-    navigate('/home');
+    const params = new URLSearchParams(window.location.search);
+    const debugLive = params.get('debugLive') === '1';
+    navigate(debugLive ? '/home?debugLive=1' : '/home');
   };
 
   const handleNavigate = (page) => {
-    navigate(`/${page}`);
+    const params = new URLSearchParams(window.location.search);
+    const debugLive = params.get('debugLive') === '1';
+    navigate(debugLive ? `/${page}?debugLive=1` : `/${page}`);
   };
 
   const handleBack = () => {
-    navigate('/home');
+    const params = new URLSearchParams(window.location.search);
+    const debugLive = params.get('debugLive') === '1';
+    navigate(debugLive ? '/home?debugLive=1' : '/home');
   };
 
   if (showLaunch) {
