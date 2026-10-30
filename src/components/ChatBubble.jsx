@@ -7,9 +7,9 @@ const ChatBubble = ({ message, type, delay = 0 }) => {
     <div className={`message ${type}`}>
       <div className="message-avatar">
         {isUser ? (
-          <img src="/avatars/user-avatar.png" alt="我" />
+          <img src="/avatars/user-avatar.webp" alt="我" />
         ) : (
-          <img src="/avatars/xinghui-avatar.png" alt="沈星回" />
+          <img src="/avatars/xinghui-avatar.webp" alt="沈星回" />
         )}
       </div>
       <div className="message-bubble">
