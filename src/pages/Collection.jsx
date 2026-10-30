@@ -175,6 +175,72 @@ const Collection = ({ onBack }) => {
       left: 0;
     `;
 
+    // 添加诊断事件监听
+    video.addEventListener('loadedmetadata', () => {
+      console.log('[Collection Live] loadedmetadata:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    video.addEventListener('loadeddata', () => {
+      console.log('[Collection Live] loadeddata:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    video.addEventListener('canplay', () => {
+      console.log('[Collection Live] canplay:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    video.addEventListener('playing', () => {
+      console.log('[Collection Live] playing:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    video.addEventListener('waiting', () => {
+      console.log('[Collection Live] waiting:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    video.addEventListener('stalled', () => {
+      console.log('[Collection Live] stalled:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    video.addEventListener('error', () => {
+      console.error('[Collection Live] error:', {
+        index,
+        src: item.video,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        errorCode: video.error?.code,
+        errorMessage: video.error?.message
+      });
+    });
+
     mediaContainer.appendChild(video);
     videoRefs.current[index] = video;
 
@@ -273,7 +339,9 @@ const Collection = ({ onBack }) => {
       if (firstPhoto && firstPhoto.isLive) {
         const firstVideo = createVideoForCard(0);
         if (firstVideo) {
-          firstVideo.play().catch(() => {});
+          firstVideo.play().catch((err) => {
+            console.error('[Collection Live] Initial play failed:', err);
+          });
         }
       }
     }, 500);
@@ -376,7 +444,9 @@ const Collection = ({ onBack }) => {
     if (!video) return;
 
     if (video === currentVideo) {
-      video.play().catch(() => {});
+      video.play().catch((err) => {
+        console.error('[Collection Live] Switch play failed:', err);
+      });
     } else {
       video.pause();
     }
