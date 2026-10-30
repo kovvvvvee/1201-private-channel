@@ -124,7 +124,7 @@ const Character = ({ onDialogue }) => {
 
   return (
     <img
-      src="/character/xinghui-home.png"
+      src="/character/xinghui-home.webp"
       alt="沈星回"
       className="character"
       loading="eager"
