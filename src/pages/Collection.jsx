@@ -14,6 +14,27 @@ const Collection = ({ onBack }) => {
   const currentIndexRef = useRef(0);
   const commentTimerRef = useRef(null);
 
+  // 诊断面板状态
+  const [debugLogs, setDebugLogs] = useState([]);
+  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [isDebugMode, setIsDebugMode] = useState(false);
+
+  // 诊断日志记录函数
+  const addDebugLog = (event, data) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugLogs(prev => {
+      const newLogs = [...prev, { timestamp, event, data }];
+      // 保留最近 100 条
+      return newLogs.slice(-100);
+    });
+  };
+
+  // 检查 URL 参数启用调试模式
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setIsDebugMode(params.get('debugLive') === '1');
+  }, []);
+
 
   const companionMessages = [
     "继续往后看吧。"
@@ -177,68 +198,82 @@ const Collection = ({ onBack }) => {
 
     // 添加诊断事件监听
     video.addEventListener('loadedmetadata', () => {
-      console.log('[Collection Live] loadedmetadata:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
-      });
+      };
+      console.log('[Collection Live] loadedmetadata:', data);
+      addDebugLog('loadedmetadata', data);
     });
 
     video.addEventListener('loadeddata', () => {
-      console.log('[Collection Live] loadeddata:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
-      });
+      };
+      console.log('[Collection Live] loadeddata:', data);
+      addDebugLog('loadeddata', data);
     });
 
     video.addEventListener('canplay', () => {
-      console.log('[Collection Live] canplay:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
-      });
+      };
+      console.log('[Collection Live] canplay:', data);
+      addDebugLog('canplay', data);
     });
 
     video.addEventListener('playing', () => {
-      console.log('[Collection Live] playing:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
-      });
+      };
+      console.log('[Collection Live] playing:', data);
+      addDebugLog('playing', data);
     });
 
     video.addEventListener('waiting', () => {
-      console.log('[Collection Live] waiting:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
-      });
+      };
+      console.log('[Collection Live] waiting:', data);
+      addDebugLog('waiting', data);
     });
 
     video.addEventListener('stalled', () => {
-      console.log('[Collection Live] stalled:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
-      });
+      };
+      console.log('[Collection Live] stalled:', data);
+      addDebugLog('stalled', data);
     });
 
     video.addEventListener('error', () => {
-      console.error('[Collection Live] error:', {
+      const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState,
         errorCode: video.error?.code,
         errorMessage: video.error?.message
-      });
+      };
+      console.error('[Collection Live] error:', data);
+      addDebugLog('error', data);
     });
 
     mediaContainer.appendChild(video);
@@ -341,6 +376,7 @@ const Collection = ({ onBack }) => {
         if (firstVideo) {
           firstVideo.play().catch((err) => {
             console.error('[Collection Live] Initial play failed:', err);
+            addDebugLog('play_failed', { index: 0, error: err.message || err });
           });
         }
       }
@@ -446,6 +482,7 @@ const Collection = ({ onBack }) => {
     if (video === currentVideo) {
       video.play().catch((err) => {
         console.error('[Collection Live] Switch play failed:', err);
+        addDebugLog('play_failed', { index, error: err.message || err });
       });
     } else {
       video.pause();
@@ -494,6 +531,21 @@ const Collection = ({ onBack }) => {
     return currentPhoto?.chibi || '/chibi/Q01.png';
   };
 
+  // ===== 复制日志 =====
+  const handleCopyLogs = async () => {
+    const logText = debugLogs.map(log =>
+      `[${log.timestamp}] ${log.event}: ${JSON.stringify(log.data)}`
+    ).join('\n');
+
+    try {
+      await navigator.clipboard.writeText(logText);
+      alert('日志已复制到剪贴板');
+    } catch (err) {
+      console.error('复制失败:', err);
+      alert('复制失败，请手动选择文本复制');
+    }
+  };
+
   // ===== 渲染 =====
   return (
     <div className="collection-page">
@@ -532,6 +584,33 @@ const Collection = ({ onBack }) => {
           ))}
         </div>
       </div>
+
+      {/* 诊断面板 */}
+      {isDebugMode && (
+        <div className="debug-panel">
+          <div className="debug-header">
+            <button onClick={() => setDebugExpanded(!debugExpanded)}>
+              {debugExpanded ? '收起' : '展开'}诊断
+            </button>
+            <button onClick={handleCopyLogs}>复制日志</button>
+          </div>
+          {debugExpanded && (
+            <div className="debug-content">
+              {debugLogs.length === 0 ? (
+                <div className="debug-empty">暂无日志</div>
+              ) : (
+                debugLogs.map((log, idx) => (
+                  <div key={idx} className="debug-log">
+                    <span className="debug-time">[{log.timestamp}]</span>
+                    <span className="debug-event">{log.event}:</span>
+                    <span className="debug-data">{JSON.stringify(log.data)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
