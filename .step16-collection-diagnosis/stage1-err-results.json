@@ -1,0 +1,18 @@
+[
+  {
+    "n": "E1 photo3 作为当前卡已发起(src已设置)",
+    "p": true
+  },
+  {
+    "n": "E2 error 后邻卡 photo4 已放行",
+    "p": true
+  },
+  {
+    "n": "E3 error 后邻卡 photo2 已放行",
+    "p": true
+  },
+  {
+    "n": "E4 队列恢复后仍可滑动",
+    "p": true
+  }
+]

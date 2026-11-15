@@ -1,0 +1,103 @@
+[
+ {
+  "src": "/photos/live/photo1.webp",
+  "stage": "req",
+  "gen": 1,
+  "now": 8908.8,
+  "tReq": 0,
+  "tLoad": null,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 0
+ },
+ {
+  "src": "/photos/live/photo1.webp",
+  "stage": "load",
+  "gen": 1,
+  "now": 8938.3,
+  "tReq": 0,
+  "tLoad": 29.4,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 962
+ },
+ {
+  "src": "/photos/photo2.webp",
+  "stage": "req",
+  "gen": 1,
+  "now": 8938.5,
+  "tReq": 0,
+  "tLoad": null,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 0
+ },
+ {
+  "src": "/photos/photo9.webp",
+  "stage": "req",
+  "gen": 1,
+  "now": 8938.6,
+  "tReq": 0,
+  "tLoad": null,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 0
+ },
+ {
+  "src": "/photos/live/photo1.webp",
+  "stage": "visible",
+  "gen": 1,
+  "now": 8943.8,
+  "tReq": 0,
+  "tLoad": 29.4,
+  "tDecode": null,
+  "tVisibleProxy": 35,
+  "naturalWidth": 962,
+  "opacity": "1",
+  "proxy": true
+ },
+ {
+  "src": "/photos/live/photo1.webp",
+  "stage": "decode",
+  "gen": 1,
+  "now": 8954.9,
+  "tReq": 0,
+  "tLoad": 29.4,
+  "tDecode": 46.1,
+  "tVisibleProxy": 35,
+  "naturalWidth": 962
+ },
+ {
+  "src": "/photos/photo3.webp",
+  "stage": "req",
+  "gen": 2,
+  "now": 12996.6,
+  "tReq": 0,
+  "tLoad": null,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 0
+ },
+ {
+  "src": "/photos/photo4.webp",
+  "stage": "req",
+  "gen": 3,
+  "now": 13753.7,
+  "tReq": 0.1,
+  "tLoad": null,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 0
+ },
+ {
+  "src": "/photos/live/photo5.webp",
+  "stage": "req",
+  "gen": 4,
+  "now": 14510.8,
+  "tReq": 0,
+  "tLoad": null,
+  "tDecode": null,
+  "tVisibleProxy": null,
+  "naturalWidth": 0
+ }
+]

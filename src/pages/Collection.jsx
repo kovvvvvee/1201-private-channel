@@ -13,7 +13,8 @@ const Collection = ({ onBack }) => {
   const isAnimating = useRef(false);
   const currentIndexRef = useRef(0);
   const commentTimerRef = useRef(null);
-  const initialPlayTimerRef = useRef(null);
+  const loadGenRef = useRef(0);
+  const queueTimerRef = useRef(null);
 
   // Live Photo 播放诊断日志（仅 console，不影响用户界面）
   const logPlayError = (trigger, index, video, err) => {
@@ -35,17 +36,39 @@ const Collection = ({ onBack }) => {
     "继续往后看吧。"
   ];
 
-  // ===== 预加载 Q版图片（仅当前+下一张，避免首屏抢占带宽） =====
-  useEffect(() => {
-    if (photos.length === 0) return;
-    const next = (currentIndex + 1) % photos.length;
-    [photos[currentIndex]?.chibi, photos[next]?.chibi].forEach(src => {
+  // ===== 图片加载四阶段诊断日志（req/load/decode/visible代理，仅 console） =====
+  const imgDiagLog = (img, stage, extra) => {
+    if (!img) return;
+    if (!img._diag) img._diag = { src: img.dataset.src || img.getAttribute('src'), t0: performance.now() };
+    const d = img._diag;
+    if (extra && extra.gen != null) d.gen = extra.gen;
+    if (stage === 'req') d.tReq = performance.now();
+    else if (stage === 'load') d.tLoad = performance.now();
+    else if (stage === 'decode') d.tDecode = performance.now();
+    else if (stage === 'visible') d.tVisible = performance.now();
+    console.warn('[ImgDiag]', JSON.stringify({
+      src: d.src, stage, gen: d.gen != null ? d.gen : null,
+      now: +performance.now().toFixed(1),
+      tReq: d.tReq != null ? +(d.tReq - d.t0).toFixed(1) : null,
+      tLoad: d.tLoad != null ? +(d.tLoad - d.t0).toFixed(1) : null,
+      tDecode: d.tDecode != null ? +(d.tDecode - d.t0).toFixed(1) : null,
+      tVisibleProxy: d.tVisible != null ? +(d.tVisible - d.t0).toFixed(1) : null,
+      naturalWidth: img.naturalWidth,
+      ...(extra && extra.gen != null ? {} : extra || {}),
+    }));
+  };
+
+  // ===== Q版预载（延后至当前照片 load 后由 release 队列触发） =====
+  const preloadChibi = (index) => {
+    if (!photos.length) return;
+    const next = (index + 1) % photos.length;
+    [photos[index]?.chibi, photos[next]?.chibi].forEach(src => {
       if (src) {
         const img = new Image();
         img.src = src;
       }
     });
-  }, [currentIndex, photos]);
+  };
 
   // ===== 加载照片（每张照片单独配置 chibi + comment） =====
   useEffect(() => {
@@ -305,18 +328,75 @@ const Collection = ({ onBack }) => {
     return video;
   };
 
-  // ===== 按需加载卡片图片（当前卡优先，再相邻卡） =====
-  const loadWindowMedia = (index) => {
+  // ===== 按需加载卡片图片（P0 当前卡立即，P1–P4 链式放行） =====
+  const loadWindowMedia = (index, dir = 1) => {
+    const gen = ++loadGenRef.current;
     const total = photos.length;
-    const order = [index, (index + 1) % total, (index - 1 + total) % total];
-    order.forEach((i, orderIdx) => {
+    if (total === 0) return;
+    const d = dir === -1 ? -1 : 1;
+    const order = [index, (index + d + total) % total, (index - d + total) % total];
+
+    const setImgSrc = (i, priority) => {
       const card = cardsRef.current[i];
       const img = card && card.querySelector('.media-container img');
       if (img && !img.getAttribute('src') && img.dataset.src) {
-        if (orderIdx === 0) img.setAttribute('fetchpriority', 'high');
+        if (priority === 'high') img.setAttribute('fetchpriority', 'high');
+        imgDiagLog(img, 'req', { gen });
         img.src = img.dataset.src;
       }
-    });
+      return img || null;
+    };
+
+    // P1–P4：当前卡稳定（load/error/3500ms超时）后按序放行，过期代际丢弃
+    const release = () => {
+      if (gen !== loadGenRef.current) return;
+      order.slice(1).forEach(i => setImgSrc(i, 'normal'));
+      preloadChibi(order[0]);
+      const item = photos[order[0]];
+      if (item && item.isLive) {
+        let v = videoRefs.current[order[0]];
+        if (!v) v = createVideoForCard(order[0]);
+        if (v && v.paused) v.play().catch(err => logPlayError('queue', order[0], v, err));
+      }
+    };
+
+    // P0：当前卡立即发起，不等待任何事件
+    setImgSrc(index, 'high');
+
+    let released = false;
+    const fire = () => {
+      if (released) return;
+      released = true;
+      if (queueTimerRef.current) {
+        clearTimeout(queueTimerRef.current);
+        queueTimerRef.current = null;
+      }
+      release();
+    };
+
+    const p0card = cardsRef.current[index];
+    const p0img = p0card && p0card.querySelector('.media-container img');
+    if (queueTimerRef.current) clearTimeout(queueTimerRef.current);
+
+    if (!p0img || p0img.complete) {
+      fire();
+      return;
+    }
+
+    p0img.addEventListener('load', () => {
+      imgDiagLog(p0img, 'load');
+      const dec = p0img.decode ? p0img.decode() : Promise.resolve();
+      dec.then(() => imgDiagLog(p0img, 'decode')).catch(() => {});
+      requestAnimationFrame(() => {
+        const card = p0img.closest('.photo-card');
+        const op = card ? getComputedStyle(card).opacity : null;
+        imgDiagLog(p0img, 'visible', { opacity: op, proxy: true });
+      });
+      fire();
+    }, { once: true });
+    p0img.addEventListener('error', fire, { once: true });
+    // 超时兜底：仅放行队列，不判定失败；迟到的 load 由 once 监听自然处理
+    queueTimerRef.current = setTimeout(fire, 3500);
   };
 
   // ===== 初始化卡片堆叠（使用 video 实况） =====
@@ -389,23 +469,6 @@ const Collection = ({ onBack }) => {
     setCurrentIndex(0);
     loadWindowMedia(0);
 
-    if (initialPlayTimerRef.current) {
-      clearTimeout(initialPlayTimerRef.current);
-    }
-
-    initialPlayTimerRef.current = setTimeout(() => {
-      const firstPhoto = photos[0];
-      if (firstPhoto && firstPhoto.isLive) {
-        const firstVideo = createVideoForCard(0);
-        if (firstVideo) {
-          firstVideo.play().catch((err) => {
-            logPlayError('initial-timer', 0, firstVideo, err);
-          });
-        }
-      }
-    }, 500);
-
-  
 
     const handleTouchStart = (e) => {
       container._touchStartX = e.touches[0].clientX;
@@ -436,11 +499,6 @@ const Collection = ({ onBack }) => {
     container.addEventListener('touchstart', handleTouchPlay, { passive: true });
 
     return () => {
-  if (initialPlayTimerRef.current) {
-    clearTimeout(initialPlayTimerRef.current);
-    initialPlayTimerRef.current = null;
-  }
-
   cleanupAllVideos();
 
   container.removeEventListener('touchstart', handleTouchStart);
@@ -494,20 +552,13 @@ const Collection = ({ onBack }) => {
 
     currentIndexRef.current = index;
     setCurrentIndex(index);
-    loadWindowMedia(index);
+    loadWindowMedia(index, dir);
 
     setIsSwitching(true);
     setTimeout(() => setIsSwitching(false), 600);
 
     const randomCompanion = companionMessages[Math.floor(Math.random() * companionMessages.length)];
     setCompanionText(randomCompanion);
-
-  const currentPhoto = photos[index];
-  let currentVideo = videoRefs.current[index];
-
-  if (currentPhoto && currentPhoto.isLive && !currentVideo) {
-    currentVideo = createVideoForCard(index);
-  }
 
   const preloadIndex = (index + 1) % photos.length;
   const preloadVideo = videoRefs.current[preloadIndex];

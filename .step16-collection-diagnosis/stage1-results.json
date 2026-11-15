@@ -1,0 +1,38 @@
+[
+  {
+    "n": "T1 P0 req 日志存在",
+    "p": true
+  },
+  {
+    "n": "T1 photo1 load 日志",
+    "p": true
+  },
+  {
+    "n": "T1 photo1 decode 日志",
+    "p": true
+  },
+  {
+    "n": "T1 photo1 visible代理日志",
+    "p": true
+  },
+  {
+    "n": "T2 邻卡 req 晚于 P0 load",
+    "p": true
+  },
+  {
+    "n": "T3 video 请求晚于图片 load",
+    "p": true
+  },
+  {
+    "n": "T4 滑动后停留在目标卡",
+    "p": true
+  },
+  {
+    "n": "T4 photo3/4 均有 req",
+    "p": true
+  },
+  {
+    "n": "T6 每张图仅 req 一次（无重复调度）",
+    "p": true
+  }
+]
