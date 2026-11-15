@@ -1,0 +1,30 @@
+[
+  {
+    "n": "首页打开",
+    "p": true
+  },
+  {
+    "n": "Message壁纸webp加载",
+    "p": true
+  },
+  {
+    "n": "信纸字体全覆盖",
+    "p": true
+  },
+  {
+    "n": "Chat背景webp加载",
+    "p": true
+  },
+  {
+    "n": "Chat真实API回复",
+    "p": true
+  },
+  {
+    "n": "生产非mock构建",
+    "p": true
+  },
+  {
+    "n": "FATAL",
+    "p": false
+  }
+]
