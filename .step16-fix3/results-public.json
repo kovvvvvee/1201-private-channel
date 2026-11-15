@@ -1,0 +1,52 @@
+[
+  {
+    "n": "P1 首进当前卡图片加载",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P1 Live Photo 自动播放",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P1 当前卡 fetchpriority=high",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P1 重进 Live Photo 恢复播放",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P2 壁纸为 webp 且已加载",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P3 信纸全部字符有字体 glyph",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P3 信纸渲染字体=Ma Shan Zheng",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "P4 chat 背景为 webp 已加载",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "无真实API外联",
+    "p": true,
+    "label": "public"
+  },
+  {
+    "n": "热缓存首页人物图即时可用",
+    "p": true,
+    "label": "public"
+  }
+]

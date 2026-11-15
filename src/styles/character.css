@@ -36,9 +36,8 @@
   pointer-events: none;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(155, 126, 255, 0.3);
-  white-space: nowrap;
-  width: fit-content;
-  max-width: none;
+  max-width: 72vw;
+  white-space: normal;
 }
 
 .dialogue-bubble.visible {

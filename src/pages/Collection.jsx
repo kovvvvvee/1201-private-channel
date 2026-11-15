@@ -13,110 +13,93 @@ const Collection = ({ onBack }) => {
   const isAnimating = useRef(false);
   const currentIndexRef = useRef(0);
   const commentTimerRef = useRef(null);
-
-  // 诊断面板状态
-  const [debugLogs, setDebugLogs] = useState([]);
-  const [debugExpanded, setDebugExpanded] = useState(false);
-  const [isDebugMode, setIsDebugMode] = useState(false);
-
-  // 诊断日志记录函数
-  const addDebugLog = (event, data) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setDebugLogs(prev => {
-      const newLogs = [...prev, { timestamp, event, data }];
-      // 保留最近 100 条
-      return newLogs.slice(-100);
-    });
-  };
-
-  // 检查 URL 参数启用调试模式
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setIsDebugMode(params.get('debugLive') === '1');
-  }, []);
+  const initialPlayTimerRef = useRef(null);
 
 
   const companionMessages = [
     "继续往后看吧。"
   ];
 
-  // ===== 预加载 Q版图片 =====
+  // ===== 预加载 Q版图片（仅当前+下一张，避免首屏抢占带宽） =====
   useEffect(() => {
-    const chibiImages = ['/chibi/Q01.png', '/chibi/Q02.png', '/chibi/Q03.png', '/chibi/Q04.png'];
-    chibiImages.forEach(src => {
-      const img = new Image();
-      img.src = src;
+    if (photos.length === 0) return;
+    const next = (currentIndex + 1) % photos.length;
+    [photos[currentIndex]?.chibi, photos[next]?.chibi].forEach(src => {
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
     });
-  }, []);
+  }, [currentIndex, photos]);
 
   // ===== 加载照片（每张照片单独配置 chibi + comment） =====
   useEffect(() => {
     const loadedPhotos = [
       // 1: 实况
       {
-        photo: '/photos/live/photo1.jpg',
+        photo: '/photos/live/photo1.webp',
         video: '/photos/live/photo1.mp4',
         isLive: true,
-        chibi: '/chibi/Q02.png',
+        chibi: '/chibi/Q02.webp',
         comment: '你每次这样看过来的时候，都很难让我移开视线。'
       },
       // 2: 普通
       {
-        photo: '/photos/photo2.jpg',
+        photo: '/photos/photo2.webp',
         isLive: false,
-        chibi: '/chibi/Q04.png',
+        chibi: '/chibi/Q04.webp',
         comment: '已收藏'
       },
       // 3: 普通
       {
-        photo: '/photos/photo3.jpg',
+        photo: '/photos/photo3.webp',
         isLive: false,
-        chibi: '/chibi/Q02.png',
+        chibi: '/chibi/Q02.webp',
         comment: '这张拍糊了。不过好像刚好把那天的风留下来了'
       },
       // 4: 普通
       {
-        photo: '/photos/photo4.jpg',
+        photo: '/photos/photo4.webp',
         isLive: false,
-        chibi: '/chibi/Q04.png',
+        chibi: '/chibi/Q04.webp',
         comment: '装备检查完成。看起来已经准备好出来了。'
       },
       // 5: 实况 ← 多句评论（数组）
       {
-        photo: '/photos/live/photo5.jpg',
+        photo: '/photos/live/photo5.webp',
         video: '/photos/live/photo5.mp4',
         isLive: true,
-        chibi: '/chibi/Q03.png',
+        chibi: '/chibi/Q03.webp',
         comment: '离得太近了。这是准备突然袭击吗？'
       },
       // 6: 实况← 多句评论（数组）
       {
-        photo: '/photos/live/photo6.jpg',
+        photo: '/photos/live/photo6.webp',
         video: '/photos/live/photo6.mp4',
         isLive: true,
-        chibi: '/chibi/Q01.png',
+        chibi: '/chibi/Q01.webp',
         comment: ['我看到了' , '全都看到了']
       },
       // 7: 实况
       {
-        photo: '/photos/live/photo7.jpg',
+        photo: '/photos/live/photo7.webp',
         video: '/photos/live/photo7.mp4',
         isLive: true,
-        chibi: '/chibi/Q04.png',
+        chibi: '/chibi/Q04.webp',
         comment: '晚上的风有点凉。'
       },
       // 8: 普通
       {
-        photo: '/photos/photo8.jpg',
+        photo: '/photos/photo8.webp',
         isLive: false,
-        chibi: '/chibi/Q03.png',
+        chibi: '/chibi/Q03.webp',
         comment: '喜欢这一张。'
       },
       // 9: 普通
       {
-        photo: '/photos/photo9.jpg',
+        photo: '/photos/photo9.webp',
         isLive: false,
-        chibi: '/chibi/Q01.png',
+        chibi: '/chibi/Q01.webp',
         comment: '我保存下来了。'
       }
     ];
@@ -159,6 +142,36 @@ const Collection = ({ onBack }) => {
     };
   }, [currentIndex, photos]);
 
+  // ===== 辅助函数：清理指定视频 =====
+  const cleanupVideo = (index) => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+
+    if (video._eventHandlers) {
+      video._eventHandlers.forEach(({ event, handler }) => {
+        video.removeEventListener(event, handler);
+      });
+      video._eventHandlers = [];
+    }
+
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+
+    if (video.parentNode) {
+      video.parentNode.removeChild(video);
+    }
+
+    delete videoRefs.current[index];
+  };
+
+  // ===== 辅助函数：清理所有视频 =====
+  const cleanupAllVideos = () => {
+    Object.keys(videoRefs.current).forEach(index => {
+      cleanupVideo(parseInt(index));
+    });
+  };
+
   // ===== 辅助函数：为指定 live 卡片创建 video =====
   const createVideoForCard = (index) => {
     if (videoRefs.current[index]) {
@@ -185,7 +198,9 @@ const Collection = ({ onBack }) => {
     video.src = item.video;
     video.poster = item.photo;
     video.muted = true;
+    video.setAttribute('muted', '');
     video.playsInline = true;
+    video.setAttribute('playsinline', '');
     video.loop = true;
     video.style.cssText = `
       width: 100%;
@@ -196,74 +211,67 @@ const Collection = ({ onBack }) => {
       left: 0;
     `;
 
-    // 添加诊断事件监听
-    video.addEventListener('loadedmetadata', () => {
+    const eventHandlers = [];
+
+    const addEventHandler = (event, handler) => {
+      video.addEventListener(event, handler);
+      eventHandlers.push({ event, handler });
+    };
+
+    addEventHandler('loadedmetadata', () => {
       const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
       };
-      console.log('[Collection Live] loadedmetadata:', data);
-      addDebugLog('loadedmetadata', data);
     });
 
-    video.addEventListener('loadeddata', () => {
+    addEventHandler('loadeddata', () => {
       const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
       };
-      console.log('[Collection Live] loadeddata:', data);
-      addDebugLog('loadeddata', data);
     });
 
-    video.addEventListener('canplay', () => {
+    const tryPlayIfCurrent = () => {
+      if (index === currentIndexRef.current && video.paused) {
+        video.play().catch(() => {});
+      }
+    };
+    addEventHandler('canplay', tryPlayIfCurrent);
+    addEventHandler('loadeddata', tryPlayIfCurrent);
+
+    addEventHandler('playing', () => {
       const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
       };
-      console.log('[Collection Live] canplay:', data);
-      addDebugLog('canplay', data);
     });
 
-    video.addEventListener('playing', () => {
+    addEventHandler('waiting', () => {
       const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
       };
-      console.log('[Collection Live] playing:', data);
-      addDebugLog('playing', data);
     });
 
-    video.addEventListener('waiting', () => {
+    addEventHandler('stalled', () => {
       const data = {
         index,
         src: item.video,
         readyState: video.readyState,
         networkState: video.networkState
       };
-      console.log('[Collection Live] waiting:', data);
-      addDebugLog('waiting', data);
     });
 
-    video.addEventListener('stalled', () => {
-      const data = {
-        index,
-        src: item.video,
-        readyState: video.readyState,
-        networkState: video.networkState
-      };
-      console.log('[Collection Live] stalled:', data);
-      addDebugLog('stalled', data);
-    });
-
-    video.addEventListener('error', () => {
+    addEventHandler('error', () => {
       const data = {
         index,
         src: item.video,
@@ -273,13 +281,27 @@ const Collection = ({ onBack }) => {
         errorMessage: video.error?.message
       };
       console.error('[Collection Live] error:', data);
-      addDebugLog('error', data);
     });
 
+    video._eventHandlers = eventHandlers;
     mediaContainer.appendChild(video);
     videoRefs.current[index] = video;
 
     return video;
+  };
+
+  // ===== 按需加载卡片图片（当前卡优先，再相邻卡） =====
+  const loadWindowMedia = (index) => {
+    const total = photos.length;
+    const order = [index, (index + 1) % total, (index - 1 + total) % total];
+    order.forEach((i, orderIdx) => {
+      const card = cardsRef.current[i];
+      const img = card && card.querySelector('.media-container img');
+      if (img && !img.getAttribute('src') && img.dataset.src) {
+        if (orderIdx === 0) img.setAttribute('fetchpriority', 'high');
+        img.src = img.dataset.src;
+      }
+    });
   };
 
   // ===== 初始化卡片堆叠（使用 video 实况） =====
@@ -289,16 +311,10 @@ const Collection = ({ onBack }) => {
   if (photos.length === 0) return;
   if (!container) return;
 
-  Object.values(videoRefs.current).forEach((video) => {
-    if (!video) return;
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-  });
+  cleanupAllVideos();
 
   container.innerHTML = '';
   cardsRef.current = [];
-  videoRefs.current = {};
 
     photos.forEach((item, i) => {
       const card = document.createElement('div');
@@ -330,28 +346,16 @@ const Collection = ({ onBack }) => {
       container.appendChild(card);
       cardsRef.current.push(card);
 
-      if (item.isLive) {
-        const img = document.createElement('img');
-        img.src = item.photo;
-        img.alt = `照片${i+1}`;
-        img.style.cssText = `
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        `;
-        mediaContainer.appendChild(img);
-      } else {
-        const img = document.createElement('img');
-        img.src = item.photo;
-        img.alt = `照片${i+1}`;
-        img.style.cssText = `
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        `;
-        
-        mediaContainer.appendChild(img);
-      }
+      // 图片延迟赋 src：只加载当前卡附近的图片，避免首次进入一次性拉取全部 9 张
+      const img = document.createElement('img');
+      img.dataset.src = item.photo;
+      img.alt = `照片${i+1}`;
+      img.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      `;
+      mediaContainer.appendChild(img);
     });
 
     const total = photos.length;
@@ -368,15 +372,19 @@ const Collection = ({ onBack }) => {
       }
     });
     setCurrentIndex(0);
+    loadWindowMedia(0);
 
-    const initialPlayTimer = setTimeout(() => {
+    if (initialPlayTimerRef.current) {
+      clearTimeout(initialPlayTimerRef.current);
+    }
+
+    initialPlayTimerRef.current = setTimeout(() => {
       const firstPhoto = photos[0];
       if (firstPhoto && firstPhoto.isLive) {
         const firstVideo = createVideoForCard(0);
         if (firstVideo) {
           firstVideo.play().catch((err) => {
             console.error('[Collection Live] Initial play failed:', err);
-            addDebugLog('play_failed', { index: 0, error: err.message || err });
           });
         }
       }
@@ -401,21 +409,30 @@ const Collection = ({ onBack }) => {
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-    return () => {
-  clearTimeout(initialPlayTimer);
+    // 用户手势兜底：触摸时确保当前 Live Photo 正在播放（覆盖自动播放被拦截的情况）
+    const handleTouchPlay = () => {
+      const idx = currentIndexRef.current;
+      const item = photos[idx];
+      if (item && item.isLive) {
+        const v = videoRefs.current[idx];
+        if (v && v.paused) v.play().catch(() => {});
+      }
+    };
+    container.addEventListener('touchstart', handleTouchPlay, { passive: true });
 
-  Object.values(videoRefs.current).forEach((video) => {
-    if (!video) return;
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-  });
+    return () => {
+  if (initialPlayTimerRef.current) {
+    clearTimeout(initialPlayTimerRef.current);
+    initialPlayTimerRef.current = null;
+  }
+
+  cleanupAllVideos();
 
   container.removeEventListener('touchstart', handleTouchStart);
   container.removeEventListener('touchend', handleTouchEnd);
+  container.removeEventListener('touchstart', handleTouchPlay);
 
   cardsRef.current = [];
-  videoRefs.current = {};
 };
   }, [photos]);
 
@@ -462,6 +479,7 @@ const Collection = ({ onBack }) => {
 
     currentIndexRef.current = index;
     setCurrentIndex(index);
+    loadWindowMedia(index);
 
     setIsSwitching(true);
     setTimeout(() => setIsSwitching(false), 600);
@@ -476,21 +494,27 @@ const Collection = ({ onBack }) => {
     currentVideo = createVideoForCard(index);
   }
 
-  Object.values(videoRefs.current).forEach((video) => {
+  const preloadIndex = (index + 1) % photos.length;
+  const preloadVideo = videoRefs.current[preloadIndex];
+
+  Object.keys(videoRefs.current).forEach(key => {
+    const videoIndex = parseInt(key);
+    const video = videoRefs.current[videoIndex];
+
     if (!video) return;
 
-    if (video === currentVideo) {
+    if (videoIndex === index) {
       video.play().catch((err) => {
         console.error('[Collection Live] Switch play failed:', err);
-        addDebugLog('play_failed', { index, error: err.message || err });
       });
-    } else {
+    } else if (videoIndex === preloadIndex) {
       video.pause();
+    } else {
+      cleanupVideo(videoIndex);
     }
   });
 
-  const preloadIndex = (index + 1) % photos.length;
-  if (photos[preloadIndex] && photos[preloadIndex].isLive) {
+  if (photos[preloadIndex] && photos[preloadIndex].isLive && !preloadVideo) {
     createVideoForCard(preloadIndex);
   }
 
@@ -528,22 +552,7 @@ const Collection = ({ onBack }) => {
   // ===== Q版 =====
   const getChibiImage = () => {
     const currentPhoto = photos[currentIndex];
-    return currentPhoto?.chibi || '/chibi/Q01.png';
-  };
-
-  // ===== 复制日志 =====
-  const handleCopyLogs = async () => {
-    const logText = debugLogs.map(log =>
-      `[${log.timestamp}] ${log.event}: ${JSON.stringify(log.data)}`
-    ).join('\n');
-
-    try {
-      await navigator.clipboard.writeText(logText);
-      alert('日志已复制到剪贴板');
-    } catch (err) {
-      console.error('复制失败:', err);
-      alert('复制失败，请手动选择文本复制');
-    }
+    return currentPhoto?.chibi || '/chibi/Q01.webp';
   };
 
   // ===== 渲染 =====
@@ -584,33 +593,6 @@ const Collection = ({ onBack }) => {
           ))}
         </div>
       </div>
-
-      {/* 诊断面板 */}
-      {isDebugMode && (
-        <div className="debug-panel">
-          <div className="debug-header">
-            <button onClick={() => setDebugExpanded(!debugExpanded)}>
-              {debugExpanded ? '收起' : '展开'}诊断
-            </button>
-            <button onClick={handleCopyLogs}>复制日志</button>
-          </div>
-          {debugExpanded && (
-            <div className="debug-content">
-              {debugLogs.length === 0 ? (
-                <div className="debug-empty">暂无日志</div>
-              ) : (
-                debugLogs.map((log, idx) => (
-                  <div key={idx} className="debug-log">
-                    <span className="debug-time">[{log.timestamp}]</span>
-                    <span className="debug-event">{log.event}:</span>
-                    <span className="debug-data">{JSON.stringify(log.data)}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

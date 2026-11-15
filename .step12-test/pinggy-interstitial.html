@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>1201私人频道</title>
+    <!-- 预加载开屏图片 -->
+    <link rel="preload" href="/icons/xinghui-start.png" as="image" type="image/png" fetchpriority="high" />
+    <!-- 预加载首页背景图 -->
+    <link rel="preload" href="/background/home-bg.webp" as="image" type="image/webp" fetchpriority="auto" />
+    <!-- 预加载沈星回人物 -->
+    <link rel="preload" href="/character/xinghui-home.webp" as="image" type="image/webp" fetchpriority="auto" />
+    <!-- 预加载钥匙图片 -->
+    <link rel="preload" href="/icons/key.webp" as="image" type="image/webp" fetchpriority="auto" />
+    <!-- 预加载留言页背景图 -->
+    <link rel="preload" href="/letter/message-bg.jpg" as="image" />
+    <!-- 预加载信纸背景图 -->
+    <link rel="preload" href="/letter/letter.png" as="image" />
+    <!-- 加载 Ma Shan Zheng 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="/assets/index-CVW8xVmW.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Cy26rOGu.css">
+  <script>
+(function () {
+  if (window.__MOCK_CHAT_INSTALLED__) return;
+  window.__MOCK_CHAT_INSTALLED__ = true;
+
+  var origFetch = window.fetch.bind(window);
+  var replyPool = [
+    '嗯。我在听。今天过得怎么样？有什么想聊的？',
+    '我在。你说，我听着。今天还顺利吗？',
+    '记得吃饭。有什么心事都可以讲给我听。',
+    '嗯。剩下的时间，我都会陪着你。'
+  ];
+  var replyIndex = 0;
+
+  function sseResponse(chunks) {
+    var encoder = new TextEncoder();
+    var stream = new ReadableStream({
+      start: function (controller) {
+        var i = 0;
+        setTimeout(function () {
+          var timer = setInterval(function () {
+            if (i >= chunks.length) {
+              clearInterval(timer);
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+              controller.close();
+              return;
+            }
+            controller.enqueue(encoder.encode('data: ' + JSON.stringify({ content: chunks[i] }) + '\n\n'));
+            i++;
+          }, 150);
+        }, 600);
+      }
+    });
+    return new Response(stream, {
+      status: 200,
+      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' }
+    });
+  }
+
+  window.fetch = function (input, init) {
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (url.indexOf('/api/chat') !== 0) {
+      return origFetch(input, init);
+    }
+    // 解析请求体，取最后一条 user 消息
+    var lastUserText = '';
+    try {
+      var body = init && init.body ? JSON.parse(init.body) : {};
+      var msgs = body.messages || [];
+      for (var k = msgs.length - 1; k >= 0; k--) {
+        if (msgs[k].role === 'user') { lastUserText = String(msgs[k].content || ''); break; }
+      }
+    } catch (e) {}
+
+    // Mock 故障注入：消息包含「失败」时返回 HTTP 500，便于体验错误/重试流程
+    if (lastUserText.indexOf('失败') !== -1) {
+      return Promise.resolve(new Response(JSON.stringify({ error: 'mock fail' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }));
+    }
+
+    var sentences = replyPool[replyIndex % replyPool.length].split('。').filter(function (s) { return s.trim(); });
+    replyIndex++;
+    var chunks = sentences.map(function (s) { return s + '。'; });
+    return Promise.resolve(sseResponse(chunks));
+  };
+})();
+</script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

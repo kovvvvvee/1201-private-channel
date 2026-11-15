@@ -1,0 +1,137 @@
+[
+  {
+    "n": "P01 冷缓存人物图在进入Home时已可显示",
+    "p": true,
+    "extra": "waited=9500ms"
+  },
+  {
+    "n": "P01 人物图 naturalWidth>0",
+    "p": true,
+    "extra": "{\"complete\":true,\"nw\":1080,\"src\":\"http://localhost:4174/character/xinghui-home.webp\"}"
+  },
+  {
+    "n": "P-all 390px home 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "P01 对话气泡不越界",
+    "p": true,
+    "extra": "{\"left\":105.6875,\"right\":192.6875,\"vw\":390}"
+  },
+  {
+    "n": "P02 冷缓存首次进入：图片按需加载（≤3张有src）",
+    "p": true,
+    "extra": "{\"totalImgs\":9,\"withSrc\":3,\"loaded\":3,\"chibiOk\":true,\"chibiSrc\":\"http://localhost:4174/chibi/Q02.webp\"}"
+  },
+  {
+    "n": "P02 冷缓存首卡图片加载完成",
+    "p": true,
+    "extra": ""
+  },
+  {
+    "n": "P02 冷缓存 Q版图加载完成",
+    "p": true,
+    "extra": ""
+  },
+  {
+    "n": "P02 Live Photo 首个视频播放（冷缓存）",
+    "p": true,
+    "extra": ""
+  },
+  {
+    "n": "P02 切换后滑回 live 视频恢复",
+    "p": true,
+    "extra": "{\"paused\":false,\"rs\":4}"
+  },
+  {
+    "n": "P03 信封 webp 显示且加载完成",
+    "p": true,
+    "extra": ""
+  },
+  {
+    "n": "P03 信纸 webp 背景 + 纸色兜底",
+    "p": true,
+    "extra": "{\"bgColor\":\"rgb(243, 234, 217)\",\"hasBgImg\":true,\"textVisible\":true}"
+  },
+  {
+    "n": "P04 无独立标点消息",
+    "p": true,
+    "extra": "punctOnly=[]"
+  },
+  {
+    "n": "P04 无双标点粘连",
+    "p": true,
+    "extra": "[]"
+  },
+  {
+    "n": "P04 mock 500 错误提示显示",
+    "p": true,
+    "extra": ""
+  },
+  {
+    "n": "P05 头像图片已加载",
+    "p": true,
+    "extra": "[{\"c\":true,\"nw\":144,\"src\":\"http://localhost:4174/avatars/user-avatar.webp\"},{\"c\":true,\"nw\":144,\"src\":\"http://localhost:4174/avatars/xinghui-avatar.webp\"},{\"c\":true,\"nw\":144,\"src\":\"http://localhost:4174/avatars/xinghui-avatar.webp\"},{\"c\":true,\"nw\":144,\"src\":\"http://localhost:4174/avatars/xinghui-avatar.webp\"}]"
+  },
+  {
+    "n": "P05 AI气泡有向左尾巴(描边+填充)",
+    "p": true,
+    "extra": "{\"aiTail\":true,\"aiTailPos\":{\"left\":\"-9px\",\"top\":\"13px\"},\"aiFill\":true,\"userTail\":true,\"gap\":10}"
+  },
+  {
+    "n": "P05 尾巴位于头像侧(gap≈10px)",
+    "p": true,
+    "extra": "gap=10"
+  },
+  {
+    "n": "P05 用户气泡有向右尾巴",
+    "p": true,
+    "extra": ""
+  },
+  {
+    "n": "P-all 320px home 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "P-all 320px chat 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "P-all 375px home 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "P-all 375px chat 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "P-all 430px home 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "P-all 430px chat 无横向溢出",
+    "p": true,
+    "extra": "overflow=0px"
+  },
+  {
+    "n": "无真实 API 请求",
+    "p": true,
+    "extra": "[]"
+  },
+  {
+    "n": "仅字体CDN等无害外联",
+    "p": true,
+    "extra": "[\"https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.113.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.118.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.119.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.115.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.112.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.108.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.79.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.117.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.116.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.111.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.105.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXadMPmDQ.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.114.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.110.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.109.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.107.woff2\",\"https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.106.woff2\"]"
+  },
+  {
+    "n": "P02 热缓存二次进入图片全部就绪",
+    "p": true,
+    "extra": "first={\"withSrc\":3} second={\"withSrc\":3,\"loaded\":3}"
+  }
+]

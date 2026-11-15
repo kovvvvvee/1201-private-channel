@@ -1,0 +1,26 @@
+[
+  {
+    "n": "Live Photo 首次进入播放",
+    "p": true
+  },
+  {
+    "n": "视频 currentTime 前进",
+    "p": true
+  },
+  {
+    "n": "离开后视频元素已清理",
+    "p": true
+  },
+  {
+    "n": "重进后 Live Photo 恢复播放",
+    "p": true
+  },
+  {
+    "n": "多次进出仅一个视频元素",
+    "p": true
+  },
+  {
+    "n": "无 Live Photo 播放报错",
+    "p": true
+  }
+]

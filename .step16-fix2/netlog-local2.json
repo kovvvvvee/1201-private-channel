@@ -1,0 +1,167 @@
+{
+  "imgSeen": {
+    "/photos/live/photo1.webp": 226,
+    "/photos/photo2.webp": 226,
+    "/photos/photo9.webp": 226
+  },
+  "fontReqs": [
+    {
+      "url": "http://localhost:4174/fonts/mashan-zhen-subset.woff2",
+      "start": 464055.076922,
+      "type": "Font",
+      "end": 464055.100753,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 42470
+    }
+  ],
+  "summary": [
+    {
+      "url": "/icons/xinghui-start.png",
+      "type": "Image",
+      "mime": "image/png",
+      "start": 0.01,
+      "dur": "14ms",
+      "size": "16KB"
+    },
+    {
+      "url": "/background/home-bg.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "23ms",
+      "size": "55KB"
+    },
+    {
+      "url": "/character/xinghui-home.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "42ms",
+      "size": "150KB"
+    },
+    {
+      "url": "/icons/key.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "44ms",
+      "size": "5KB"
+    },
+    {
+      "url": "/letter/message-bg.jpg",
+      "type": "Image",
+      "mime": "image/jpeg",
+      "start": 0.01,
+      "dur": "52ms",
+      "size": "284KB"
+    },
+    {
+      "url": "/letter/letter.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "59ms",
+      "size": "97KB"
+    },
+    {
+      "url": "/letter/envelope.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "68ms",
+      "size": "136KB"
+    },
+    {
+      "url": "/avatars/xinghui-avatar.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "69ms",
+      "size": "6KB"
+    },
+    {
+      "url": "/avatars/user-avatar.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.01,
+      "dur": "71ms",
+      "size": "6KB"
+    },
+    {
+      "url": "/assets/index-CDlaX626.js",
+      "type": "Script",
+      "mime": "text/javascript",
+      "start": 0.01,
+      "dur": "30ms",
+      "size": "65KB"
+    },
+    {
+      "url": "/assets/index-sgsXDLww.css",
+      "type": "Stylesheet",
+      "mime": "text/css",
+      "start": 0.01,
+      "dur": "31ms",
+      "size": "5KB"
+    },
+    {
+      "url": "/chibi/Q01.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.16,
+      "dur": "9ms",
+      "size": "85KB"
+    },
+    {
+      "url": "/chibi/Q02.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.19,
+      "dur": "11ms",
+      "size": "72KB"
+    },
+    {
+      "url": "/chibi/Q04.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.19,
+      "dur": "18ms",
+      "size": "98KB"
+    },
+    {
+      "url": "/photos/photo9.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.19,
+      "dur": "20ms",
+      "size": "88KB"
+    },
+    {
+      "url": "/photos/live/photo1.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.19,
+      "dur": "20ms",
+      "size": "58KB"
+    },
+    {
+      "url": "/photos/photo2.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.19,
+      "dur": "23ms",
+      "size": "45KB"
+    },
+    {
+      "url": "/photos/live/photo1.mp4",
+      "type": "Media",
+      "mime": "video/mp4",
+      "start": 9.69,
+      "dur": "10ms",
+      "size": "287KB"
+    }
+  ],
+  "letterAt": 19.2,
+  "fontReadyAt": 19.2,
+  "settled": true
+}

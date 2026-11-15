@@ -48,6 +48,7 @@
 
 /* ===== 消息气泡 ===== */
 .message-bubble {
+  position: relative;
   padding: 12px 16px;
   font-size: 15px;
   line-height: 1.5;
@@ -63,6 +64,19 @@
   border-bottom-right-radius: 4px;
 }
 
+/* 用户气泡尾巴：向右指向头像 */
+.message.user .message-bubble::before {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 14px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid #DFD2FF;
+}
+
 /* ===== 沈星回气泡（靠左，淡紫色背景+紫色边框） ===== */
 .message.ai .message-bubble {
   background: rgba(250, 246, 255, 0.88);
@@ -71,6 +85,31 @@
   border-radius: 16px;
   border-bottom-left-radius: 4px;
   box-shadow: 0 2px 10px rgba(155, 126, 255, 0.08);
+}
+
+/* 沈星回气泡尾巴：向左指向头像（双层：外层描边色 + 内层填充色） */
+.message.ai .message-bubble::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 13px;
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-right: 9px solid rgba(155, 126, 255, 0.35);
+}
+
+.message.ai .message-bubble::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 14px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid rgba(250, 246, 255, 0.88);
 }
 
 /* ===== 窄屏适配 ===== */
@@ -89,5 +128,11 @@
   .message-bubble {
     font-size: 13px;
     padding: 10px 14px;
+  }
+
+  .message.user .message-bubble::before,
+  .message.ai .message-bubble::before,
+  .message.ai .message-bubble::after {
+    top: 12px;
   }
 }

@@ -4,12 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>1201私人频道</title>
+    <!-- 预加载开屏图片 -->
+    <link rel="preload" href="/icons/xinghui-start.png" as="image" type="image/png" fetchpriority="high" />
     <!-- 预加载首页背景图 -->
-    <link rel="preload" href="/background/home-bg.png" as="image" />
-    <!-- 加载 Ma Shan Zheng 字体 -->
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index-IEsR3zHJ.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Djd6o3op.css">
+    <link rel="preload" href="/background/home-bg.webp" as="image" type="image/webp" fetchpriority="auto" />
+    <!-- 预加载沈星回人物 -->
+    <link rel="preload" href="/character/xinghui-home.webp" as="image" type="image/webp" fetchpriority="auto" />
+    <!-- 预加载钥匙图片 -->
+    <link rel="preload" href="/icons/key.webp" as="image" type="image/webp" fetchpriority="auto" />
+    <!-- 预加载留言页背景图 -->
+    <link rel="preload" href="/letter/message-bg.webp" as="image" />
+    <!-- 预加载信纸与信封 -->
+    <link rel="preload" href="/letter/letter.webp" as="image" />
+    <link rel="preload" href="/letter/envelope.webp" as="image" />
+    <!-- 预加载聊天头像 -->
+    <link rel="preload" href="/avatars/xinghui-avatar.webp" as="image" />
+    <link rel="preload" href="/avatars/user-avatar.webp" as="image" />
+    <!-- 预加载特别通讯背景图 -->
+    <link rel="preload" href="/chat/chat-bg.webp" as="image" />
+    <!-- 预加载本地信纸字体（42KB 子集，替代 Google Fonts） -->
+    <link rel="preload" href="/fonts/mashan-zhen-subset.woff2" as="font" type="font/woff2" crossorigin />
+    <script type="module" crossorigin src="/assets/index-DQeBDEOW.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BF72HsLz.css">
   </head>
   <body>
     <div id="root"></div>

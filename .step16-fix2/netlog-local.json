@@ -1,0 +1,328 @@
+{
+  "imgSeen": {
+    "/photos/live/photo1.jpg": 244,
+    "/photos/photo2.jpg": 244,
+    "/photos/photo9.jpg": 244
+  },
+  "fontReqs": [
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap",
+      "start": 462519.746883,
+      "type": "Stylesheet",
+      "end": 462520.217258,
+      "size": null,
+      "mime": "text/css",
+      "encoded": 30142
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.113.woff2",
+      "start": 462538.857028,
+      "type": "Font",
+      "end": 462539.374152,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 87035
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.118.woff2",
+      "start": 462538.857127,
+      "type": "Font",
+      "end": 462539.350895,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 70436
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.119.woff2",
+      "start": 462538.860452,
+      "type": "Font",
+      "end": 462539.403557,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 13505
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.115.woff2",
+      "start": 462538.860571,
+      "type": "Font",
+      "end": 462539.41728,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 82395
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.112.woff2",
+      "start": 462538.860605,
+      "type": "Font",
+      "end": 462539.449012,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 88556
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.108.woff2",
+      "start": 462538.860639,
+      "type": "Font",
+      "end": 462539.481819,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 92040
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.79.woff2",
+      "start": 462538.860669,
+      "type": "Font",
+      "end": 462539.586609,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 37136
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.117.woff2",
+      "start": 462538.861548,
+      "type": "Font",
+      "end": 462539.593256,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 77550
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.116.woff2",
+      "start": 462538.861608,
+      "type": "Font",
+      "end": 462539.593361,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 78902
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.111.woff2",
+      "start": 462538.86165,
+      "type": "Font",
+      "end": 462539.586445,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 92375
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.105.woff2",
+      "start": 462538.861677,
+      "type": "Font",
+      "end": 462539.591922,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 90164
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXadMPmDQ.woff2",
+      "start": 462538.86244,
+      "type": "Font",
+      "end": 462539.526148,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 13358
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.114.woff2",
+      "start": 462538.862529,
+      "type": "Font",
+      "end": 462539.582608,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 84643
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.110.woff2",
+      "start": 462538.862563,
+      "type": "Font",
+      "end": 462539.593443,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 88566
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.109.woff2",
+      "start": 462538.865346,
+      "type": "Font",
+      "end": 462539.588101,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 89366
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.107.woff2",
+      "start": 462538.870793,
+      "type": "Font",
+      "end": 462539.59505,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 90062
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/mashanzheng/v18/NaPecZTRCLxvwo41b4gvzkXaRMGEFoZJFdX0wQ5Xo5Hr21L9zCcRFhbSe5Nk0pIMuUkHEA.106.woff2",
+      "start": 462538.873622,
+      "type": "Font",
+      "end": 462539.582419,
+      "size": null,
+      "mime": "font/woff2",
+      "encoded": 90895
+    }
+  ],
+  "summary": [
+    {
+      "url": "/icons/xinghui-start.png",
+      "type": "Image",
+      "mime": "image/png",
+      "start": 0.02,
+      "dur": "9ms",
+      "size": "16KB"
+    },
+    {
+      "url": "/background/home-bg.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "10ms",
+      "size": "55KB"
+    },
+    {
+      "url": "/character/xinghui-home.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "39ms",
+      "size": "150KB"
+    },
+    {
+      "url": "/icons/key.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "43ms",
+      "size": "5KB"
+    },
+    {
+      "url": "/letter/message-bg.jpg",
+      "type": "Image",
+      "mime": "image/jpeg",
+      "start": 0.02,
+      "dur": "48ms",
+      "size": "284KB"
+    },
+    {
+      "url": "/letter/letter.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "54ms",
+      "size": "97KB"
+    },
+    {
+      "url": "/letter/envelope.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "58ms",
+      "size": "136KB"
+    },
+    {
+      "url": "/avatars/xinghui-avatar.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "61ms",
+      "size": "6KB"
+    },
+    {
+      "url": "/avatars/user-avatar.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 0.02,
+      "dur": "64ms",
+      "size": "6KB"
+    },
+    {
+      "url": "/assets/index-DRphFcmn.js",
+      "type": "Script",
+      "mime": "text/javascript",
+      "start": 0.02,
+      "dur": "17ms",
+      "size": "65KB"
+    },
+    {
+      "url": "/assets/index-C-CpgitA.css",
+      "type": "Stylesheet",
+      "mime": "text/css",
+      "start": 0.02,
+      "dur": "11ms",
+      "size": "4KB"
+    },
+    {
+      "url": "/chibi/Q01.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.64,
+      "dur": "5ms",
+      "size": "85KB"
+    },
+    {
+      "url": "/chibi/Q02.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.64,
+      "dur": "7ms",
+      "size": "72KB"
+    },
+    {
+      "url": "/chibi/Q03.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.64,
+      "dur": "9ms",
+      "size": "69KB"
+    },
+    {
+      "url": "/chibi/Q04.webp",
+      "type": "Image",
+      "mime": "image/webp",
+      "start": 9.64,
+      "dur": "9ms",
+      "size": "98KB"
+    },
+    {
+      "url": "/photos/photo9.jpg",
+      "type": "Image",
+      "mime": "image/jpeg",
+      "start": 9.65,
+      "dur": "5ms",
+      "size": "233KB"
+    },
+    {
+      "url": "/photos/live/photo1.jpg",
+      "type": "Image",
+      "mime": "image/jpeg",
+      "start": 9.65,
+      "dur": "7ms",
+      "size": "94KB"
+    },
+    {
+      "url": "/photos/photo2.jpg",
+      "type": "Image",
+      "mime": "image/jpeg",
+      "start": 9.65,
+      "dur": "8ms",
+      "size": "77KB"
+    },
+    {
+      "url": "/photos/live/photo1.mp4",
+      "type": "Media",
+      "mime": "video/mp4",
+      "start": 10.16,
+      "dur": "3ms",
+      "size": "287KB"
+    }
+  ],
+  "letterAt": 19.97,
+  "fontReadyAt": 19.97,
+  "settled": true
+}

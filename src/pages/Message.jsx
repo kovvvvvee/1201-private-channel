@@ -6,6 +6,8 @@ const Message = ({ onBack }) => {
   const [messageVisible, setMessageVisible] = useState(false);
   const [showEnvelope, setShowEnvelope] = useState(false);
   const [showLetter, setShowLetter] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [showAudioButton, setShowAudioButton] = useState(false);
   const audioRef = useRef(null);
 
   const messages = [
@@ -14,20 +16,83 @@ const Message = ({ onBack }) => {
     "好像……是给你的。"
   ];
 
-  // 预加载背景图
+  // 预加载背景图、信封与信纸
   useEffect(() => {
-    const img = new Image();
-    img.src = '/letter/message-bg.jpg';
+    ['/letter/message-bg.webp', '/letter/envelope.webp', '/letter/letter.webp'].forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
   }, []);
 
-  // 初始化音频并立即播放
+  // 初始化音频并尝试播放
   useEffect(() => {
     const audio = new Audio('/audio/bgm.mp3');
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
-    // 一进入页面就播放
-    audio.play().catch(() => {});
+    let active = true;
+
+    const updatePlayingState = () => {
+      setIsAudioPlaying(!audio.paused);
+    };
+
+    const handlePlay = () => {
+      updatePlayingState();
+      setShowAudioButton(false);
+    };
+
+    const handlePause = () => {
+      updatePlayingState();
+      setShowAudioButton(true);
+    };
+
+    const handleEnded = () => {
+      if (audio.loop) {
+        setIsAudioPlaying(true);
+      } else {
+        setIsAudioPlaying(false);
+      }
+    };
+
+    const handleError = (error) => {
+      console.error('[Message] Audio error:', error);
+      setIsAudioPlaying(false);
+      setShowAudioButton(true);
+    };
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    const attemptPlay = async () => {
+      try {
+        await audio.play();
+        if (active) setIsAudioPlaying(true);
+      } catch (error) {
+        console.log('[Message] Autoplay blocked, showing play button:', error.message);
+        if (!active) return;
+        setIsAudioPlaying(false);
+        setShowAudioButton(true);
+      }
+    };
+
+    attemptPlay();
+
+    return () => {
+      active = false;
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   // 文字逐条显示逻辑
@@ -54,14 +119,6 @@ const Message = ({ onBack }) => {
     };
 
     showNextMessage();
-
-    // 组件卸载时停止音乐
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
-    };
   }, []);
 
   const handleEnvelopeClick = () => {
@@ -71,17 +128,35 @@ const Message = ({ onBack }) => {
 
   const handleCloseLetter = () => {
     setShowLetter(false);
-    // 关闭信纸时停止音乐
     if (audioRef.current) {
       audioRef.current.pause();
     }
     onBack();
   };
 
+  const handleBack = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    onBack();
+  };
+
+  const handlePlayAudio = () => {
+    if (audioRef.current && audioRef.current.paused) {
+      audioRef.current.play()
+        .then(() => {
+          setShowAudioButton(false);
+        })
+        .catch(error => {
+          console.error('[Message] Manual play failed:', error);
+        });
+    }
+  };
+
   return (
     <div className="message-page">
       <div className="page-header">
-        <button className="back-button" onClick={onBack}>←</button>
+        <button className="back-button" onClick={handleBack}>←</button>
         <div className="page-title">留言</div>
       </div>
       <div className="message-content">
@@ -90,8 +165,18 @@ const Message = ({ onBack }) => {
         </div>
         {showEnvelope && (
           <div className="envelope-container visible" onClick={handleEnvelopeClick}>
-            <img src="/letter/envelope.png" alt="信封" className="envelope-image" />
+            <img
+              src="/letter/envelope.webp"
+              alt="信封"
+              className="envelope-image"
+              onError={(e) => { e.target.src = '/letter/envelope.png'; }}
+            />
           </div>
+        )}
+        {showAudioButton && (
+          <button className="audio-play-button" onClick={handlePlayAudio}>
+            🎵 播放音乐
+          </button>
         )}
       </div>
       {showLetter && (

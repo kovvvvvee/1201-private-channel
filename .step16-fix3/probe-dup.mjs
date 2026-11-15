@@ -1,0 +1,21 @@
+import { launchEdge, newPage, CDP } from '../.step12-test/cdp.mjs';
+const { child, wsUrl } = await launchEdge({ port: 9237 });
+const b = new CDP(wsUrl); await b.connect();
+const p = await newPage(b, { w: 390, h: 844 });
+await p.send('Network.enable'); await p.send('Network.setCacheDisabled', { cacheDisabled: true });
+await p.navigate('http://localhost:4174/');
+await p.waitFor('!!document.querySelector(".start-icon")', 60000);
+await p.clickSelector('.start-icon');
+await p.waitFor('!!document.querySelector(".character")', 30000);
+await p.evalJS('localStorage.clear()');
+const snap = () => p.evalJS(`performance.getEntriesByType('resource').filter(r=>/message-bg|chat-bg/.test(r.name)).map(r=>({n:r.name.split('/').pop(),s:+r.startTime.toFixed(0),e:+r.responseEnd.toFixed(0),sz:r.transferSize,enc:r.encodedBodySize}))`);
+console.log('AT_HOME', JSON.stringify(await snap()));
+// 进入 Message 页（点击底部导航第2个）
+await p.evalJS(`[...document.querySelectorAll('.bottom-nav-item, .nav-item, [class*=nav]')].length`);
+const clicked = await p.evalJS(`(() => { const els=[...document.querySelectorAll('a,button,div')].filter(e=>e.textContent && e.textContent.trim()==='留言'); if(els.length){els[0].click();return true} return false })()`);
+console.log('navClick', clicked);
+await new Promise(r => setTimeout(r, 3000));
+console.log('AT_MSG', JSON.stringify(await snap()));
+await new Promise(r => setTimeout(r, 5000));
+console.log('AT_MSG+5s', JSON.stringify(await snap()));
+b.close(); child.kill(); process.exit(0);

@@ -7,7 +7,7 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  background: url('/chat/chat-bg.jpg') center/cover no-repeat;
+  background: url('/chat/chat-bg.webp') center/cover no-repeat;
 }
 
 /* 聊天背景遮罩 - 让文字清晰可读 */

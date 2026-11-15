@@ -1,0 +1,10 @@
+import { launchEdge, newPage, CDP } from '../.step12-test/cdp.mjs';
+const { child, wsUrl } = await launchEdge({ port: 9236 });
+const b = new CDP(wsUrl); await b.connect();
+const p = await newPage(b, { w: 390, h: 844 });
+await p.send('Network.enable'); await p.send('Network.setCacheDisabled', { cacheDisabled: true });
+await p.navigate('http://localhost:4174/');
+await new Promise(r => setTimeout(r, 4000));
+const e = await p.evalJS(`performance.getEntriesByType('resource').filter(r=>/message-bg|chat-bg|letter|envelope|font/.test(r.name)).map(r=>({n:r.name.split('/').pop(),s:+r.startTime.toFixed(0),e:+r.responseEnd.toFixed(0),sz:r.transferSize}))`);
+console.log(JSON.stringify(e));
+b.close(); child.kill(); process.exit(0);

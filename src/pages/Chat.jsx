@@ -16,9 +16,13 @@ const Chat = ({ onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const chatAreaRef = useRef(null);
   const endingProcessedRef = useRef(false);
+  const isRequestingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   // 加载保存的频道状态
   useEffect(() => {
+    isMountedRef.current = true;
+    
     const savedState = storage.getChannelState();
     setChatCount(savedState.remainCount);
     setMessages(savedState.messages || []);
@@ -28,6 +32,10 @@ const Chat = ({ onBack }) => {
     if (savedState.closed) {
       setShowClosedModal(true);
     }
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   // 自动滚动到底部
@@ -886,8 +894,9 @@ const Chat = ({ onBack }) => {
 
   // ===== 发送消息 =====
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || chatCount <= 0 || isChannelClosed || isLoading) return;
+    if (!inputValue.trim() || chatCount <= 0 || isChannelClosed || isLoading || isRequestingRef.current) return;
 
+    isRequestingRef.current = true;
     const userMessage = inputValue.trim();
     const newCount = chatCount - 1;
 
@@ -953,9 +962,6 @@ while (true) {
 
     console.log('🔍 AI原始回复:', aiFullResponse);
 
-      // ❌ 删除这一行：不再保存完整回复，避免重复
-      // const finalAiMsg = { text: aiFullResponse, type: 'ai' };
-      // storage.addMessage(finalAiMsg);
       setIsLoading(false);
 
   // ===== 拆分回复为短句并逐条发送 =====
@@ -965,7 +971,8 @@ const sentences = splitIntoSentences(aiFullResponse);
 const uniqueSentences = [];
 for (const sentence of sentences) {
   const trimmed = sentence.trim();
-  if (trimmed && !uniqueSentences.includes(trimmed)) {
+  // 过滤纯标点/符号片段（如单独的"。"、"？。"），避免作为独立消息发送
+  if (trimmed && /[\p{L}\p{N}]/u.test(trimmed) && !uniqueSentences.includes(trimmed)) {
     uniqueSentences.push(trimmed);
   }
 }
@@ -973,8 +980,11 @@ for (const sentence of sentences) {
 if (uniqueSentences.length === 0) {
   // 如果没有有效内容，显示占位消息
   const fallbackMsg = { text: '我在。', type: 'ai' };
-  setMessages((prev) => [...prev, fallbackMsg]);
-  storage.addMessage(fallbackMsg);
+  if (isMountedRef.current) {
+    setMessages((prev) => [...prev, fallbackMsg]);
+    storage.addMessage(fallbackMsg);
+  }
+  isRequestingRef.current = false;
   return;
 }
 
@@ -984,6 +994,8 @@ let sentenceIndex = 0;
 const displayedTexts = [];
 
 const addNextSentence = () => {
+  if (!isMountedRef.current) return;
+  
   if (sentenceIndex < uniqueSentences.length) {
     const sentence = uniqueSentences[sentenceIndex].trim();
     // ✅ 检查是否已显示过
@@ -998,26 +1010,33 @@ const addNextSentence = () => {
   } else {
     // 所有句子发送完毕，检查特殊阶段
     checkSpecialStages(newCount);
+    isRequestingRef.current = false;
   }
 };
 
 // 特殊阶段检查（不依赖句子发送完成）
 const checkSpecialStages = (count) => {
+  if (!isMountedRef.current) return;
+  
   // 第8轮追加
   if (count === 12 - 8 && !endingTriggered) {
     setTimeout(() => {
-      const extraMsg = { text: '时间好像过得有点快……', type: 'ai' };
-      setMessages((prev) => [...prev, extraMsg]);
-      storage.addMessage(extraMsg);
+      if (isMountedRef.current) {
+        const extraMsg = { text: '时间好像过得有点快……', type: 'ai' };
+        setMessages((prev) => [...prev, extraMsg]);
+        storage.addMessage(extraMsg);
+      }
     }, 600);
   }
 
   // 第10轮追加
   if (count === 12 - 10 && !endingTriggered) {
     setTimeout(() => {
-      const extraMsg = { text: '剩下的不多了呢。', type: 'ai' };
-      setMessages((prev) => [...prev, extraMsg]);
-      storage.addMessage(extraMsg);
+      if (isMountedRef.current) {
+        const extraMsg = { text: '剩下的不多了呢。', type: 'ai' };
+        setMessages((prev) => [...prev, extraMsg]);
+        storage.addMessage(extraMsg);
+      }
     }, 800);
   }
 
@@ -1026,7 +1045,9 @@ const checkSpecialStages = (count) => {
     setEndingTriggered(true);
     storage.setEndingTriggered(true);
     setTimeout(() => {
-      triggerEnding();
+      if (isMountedRef.current) {
+        triggerEnding();
+      }
     }, 1200);
   }
 };
@@ -1036,10 +1057,23 @@ addNextSentence();
 
     } catch (error) {
       console.error('AI 请求失败:', error);
-      const errorMsg = { text: '通讯信号不稳定……稍后再试吧。', type: 'ai' };
-      setMessages((prev) => [...prev, errorMsg]);
-      storage.addMessage(errorMsg);
+      
+      // 恢复额度
+      const restoredCount = chatCount;
+      setChatCount(restoredCount);
+      storage.setRemainCount(restoredCount);
+      
+      // 恢复输入框
+      setInputValue(userMessage);
+      
+      if (isMountedRef.current) {
+        const errorMsg = { text: '通讯信号不稳定……稍后再试吧。', type: 'ai' };
+        setMessages((prev) => [...prev, errorMsg]);
+        storage.addMessage(errorMsg);
+      }
       setIsLoading(false);
+    } finally {
+      isRequestingRef.current = false;
     }
   };
 
@@ -1052,6 +1086,8 @@ addNextSentence();
     let index = 0;
 
     const addNext = () => {
+      if (!isMountedRef.current) return;
+      
       if (index < endingMessages.length) {
         const endingMsg = { text: endingMessages[index], type: 'ai' };
         setMessages((prev) => [...prev, endingMsg]);
@@ -1060,14 +1096,18 @@ addNextSentence();
         setTimeout(addNext, 800);
       } else {
         setTimeout(() => {
-          setIsClosing(true);
-          storage.setChannelClosed(true);
-          storage.setEndingTriggered(true);
-          setIsChannelClosed(true);
+          if (isMountedRef.current) {
+            setIsClosing(true);
+            storage.setChannelClosed(true);
+            storage.setEndingTriggered(true);
+            setIsChannelClosed(true);
 
-          setTimeout(() => {
-            onBack();
-          }, 2000);
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                onBack();
+              }
+            }, 2000);
+          }
         }, 1000);
       }
     };

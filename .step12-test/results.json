@@ -1,0 +1,282 @@
+[
+  {
+    "name": "Launch: 点击开始后动画结束并进入 Home",
+    "pass": true,
+    "detail": "耗时 8631ms"
+  },
+  {
+    "name": "Launch: 无重复触发/卡死（停留在 /home）",
+    "pass": true,
+    "detail": "/home"
+  },
+  {
+    "name": "Home: home-bg.webp 已加载",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Home: 角色图 xinghui-home.webp 加载完成",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Home: 点击角色弹出对话气泡",
+    "pass": true,
+    "detail": "今天是特别的一天。"
+  },
+  {
+    "name": "Home: BottomNav 固定底部且 3 个按钮",
+    "pass": true,
+    "detail": "{\"bottom\":824,\"vh\":844,\"buttons\":3}"
+  },
+  {
+    "name": "Home: 隐藏钥匙彩蛋元素存在",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Collection: 9 张照片卡片渲染",
+    "pass": true,
+    "detail": "cards=9"
+  },
+  {
+    "name": "Collection: Q01-Q04 webp 均可解码",
+    "pass": true,
+    "detail": "{\"Q01\":1026,\"Q02\":928,\"Q03\":1156,\"Q04\":1262}"
+  },
+  {
+    "name": "Collection: 照片图片加载完成",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Collection: Live Photo(video) 自动播放",
+    "pass": true,
+    "detail": "{\"paused\":false,\"rs\":4}"
+  },
+  {
+    "name": "Collection: 圆点切换到第2张",
+    "pass": true,
+    "detail": "http://localhost:5175/chibi/Q04.webp"
+  },
+  {
+    "name": "Collection: 离开 Live 卡后 video 被清理",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Collection: 触摸滑动切换到下一张",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Collection: 切到 Live 卡后 video 播放",
+    "pass": true,
+    "detail": "{\"paused\":false}"
+  },
+  {
+    "name": "Collection: 多句评论自动轮换",
+    "pass": true,
+    "detail": "我看到了 -> 全都看到了"
+  },
+  {
+    "name": "Collection: 循环回到 Live 卡 video 恢复播放",
+    "pass": true,
+    "detail": "{\"paused\":false}"
+  },
+  {
+    "name": "Collection: 返回 Home 正常",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Message: 信封 envelope.webp 显示",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Message: envelope.webp 图片加载完成",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Message: 手动播放入口点击后按钮隐藏(播放成功)",
+    "pass": false,
+    "detail": ""
+  },
+  {
+    "name": "Message: 信纸 letter.webp 背景与文字正常",
+    "pass": true,
+    "detail": "imgW=566 textLen=447"
+  },
+  {
+    "name": "Message: 关闭信纸返回 Home",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Chat: 初始剩余次数 = 12",
+    "pass": true,
+    "detail": "📡 12"
+  },
+  {
+    "name": "Chat: 消息发送后 AI 回复到达",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Chat: 次数 12 -> 11",
+    "pass": true,
+    "detail": "📡 11"
+  },
+  {
+    "name": "Chat: AI 回复拆分为多条短句气泡",
+    "pass": true,
+    "detail": "[\"你好\",\"嗯。\",\"我在听。\",\"今天过得怎么样？\",\"有什么想聊的？\"]"
+  },
+  {
+    "name": "Chat: Enter 键发送正常",
+    "pass": true,
+    "detail": "📡 10"
+  },
+  {
+    "name": "Chat: 连续发送相同文本正常",
+    "pass": true,
+    "detail": "count=2"
+  },
+  {
+    "name": "Chat: 次数 10 -> 9",
+    "pass": true,
+    "detail": "📡 9"
+  },
+  {
+    "name": "Chat: 快速连点只发送一次",
+    "pass": true,
+    "detail": "before=3 after=4"
+  },
+  {
+    "name": "Chat: API 异常时显示错误提示",
+    "pass": true,
+    "detail": "{\"errBubble\":true,\"inputVal\":\"故障测试\",\"badge\":\"📡 9\"}"
+  },
+  {
+    "name": "Chat: 异常后输入内容恢复",
+    "pass": true,
+    "detail": "故障测试"
+  },
+  {
+    "name": "Chat: 异常后次数恢复",
+    "pass": false,
+    "detail": "📡 8 -> 📡 9"
+  },
+  {
+    "name": "Chat: 第8轮追加消息触发",
+    "pass": true,
+    "detail": "📡 4"
+  },
+  {
+    "name": "Chat: 第10轮追加消息触发",
+    "pass": true,
+    "detail": "📡 2"
+  },
+  {
+    "name": "移动 320px: Home 无横向溢出+导航不越界",
+    "pass": true,
+    "detail": "overflow=false"
+  },
+  {
+    "name": "移动 320px: Collection 无横向溢出",
+    "pass": true,
+    "detail": "{\"l\":16,\"r\":304,\"w\":320}"
+  },
+  {
+    "name": "移动 320px: Message 无横向溢出",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "移动 320px: Chat 无横向溢出+输入框可见",
+    "pass": true,
+    "detail": "{\"t\":518,\"b\":554,\"vh\":568,\"visible\":true}"
+  },
+  {
+    "name": "移动 375px: Home 无横向溢出+导航不越界",
+    "pass": true,
+    "detail": "overflow=false"
+  },
+  {
+    "name": "移动 375px: Collection 无横向溢出",
+    "pass": true,
+    "detail": "{\"l\":16,\"r\":359,\"w\":375}"
+  },
+  {
+    "name": "移动 375px: Message 无横向溢出",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "移动 375px: Chat 无横向溢出+输入框可见",
+    "pass": true,
+    "detail": "{\"t\":617,\"b\":653,\"vh\":667,\"visible\":true}"
+  },
+  {
+    "name": "移动 375px: 模拟键盘弹出后输入区仍在视口内",
+    "pass": true,
+    "detail": "{\"areaBottom\":380,\"vh\":380,\"inputVisible\":true}"
+  },
+  {
+    "name": "移动 390px: Home 无横向溢出+导航不越界",
+    "pass": true,
+    "detail": "overflow=false"
+  },
+  {
+    "name": "移动 390px: Collection 无横向溢出",
+    "pass": true,
+    "detail": "{\"l\":16,\"r\":374,\"w\":390}"
+  },
+  {
+    "name": "移动 390px: Message 无横向溢出",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "移动 390px: Chat 无横向溢出+输入框可见",
+    "pass": true,
+    "detail": "{\"t\":784,\"b\":826,\"vh\":844,\"visible\":true}"
+  },
+  {
+    "name": "移动 430px: Home 无横向溢出+导航不越界",
+    "pass": true,
+    "detail": "overflow=false"
+  },
+  {
+    "name": "移动 430px: Collection 无横向溢出",
+    "pass": true,
+    "detail": "{\"l\":16,\"r\":414,\"w\":430}"
+  },
+  {
+    "name": "移动 430px: Message 无横向溢出",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "移动 430px: Chat 无横向溢出+输入框可见",
+    "pass": true,
+    "detail": "{\"t\":872,\"b\":914,\"vh\":932,\"visible\":true}"
+  },
+  {
+    "name": "Chat: 第12轮触发结局并自动返回 Home",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Chat: 频道状态已持久化 closed=true",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "Chat: 频道关闭后底部导航拦截进入",
+    "pass": true,
+    "detail": "/home"
+  }
+]
