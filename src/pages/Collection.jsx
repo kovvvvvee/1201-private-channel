@@ -15,6 +15,21 @@ const Collection = ({ onBack }) => {
   const commentTimerRef = useRef(null);
   const initialPlayTimerRef = useRef(null);
 
+  // Live Photo 播放诊断日志（仅 console，不影响用户界面）
+  const logPlayError = (trigger, index, video, err) => {
+    console.warn('[LiveDiag]', JSON.stringify({
+      trigger,
+      index,
+      name: err && err.name,
+      message: err && err.message,
+      readyState: video.readyState,
+      networkState: video.networkState,
+      paused: video.paused,
+      currentTime: +video.currentTime.toFixed(2),
+      src: video.currentSrc || video.src,
+    }));
+  };
+
 
   const companionMessages = [
     "继续往后看吧。"
@@ -236,9 +251,9 @@ const Collection = ({ onBack }) => {
       };
     });
 
-    const tryPlayIfCurrent = () => {
+    const tryPlayIfCurrent = (e) => {
       if (index === currentIndexRef.current && video.paused) {
-        video.play().catch(() => {});
+        video.play().catch((err) => logPlayError(e.type, index, video, err));
       }
     };
     addEventHandler('canplay', tryPlayIfCurrent);
@@ -384,7 +399,7 @@ const Collection = ({ onBack }) => {
         const firstVideo = createVideoForCard(0);
         if (firstVideo) {
           firstVideo.play().catch((err) => {
-            console.error('[Collection Live] Initial play failed:', err);
+            logPlayError('initial-timer', 0, firstVideo, err);
           });
         }
       }
@@ -415,7 +430,7 @@ const Collection = ({ onBack }) => {
       const item = photos[idx];
       if (item && item.isLive) {
         const v = videoRefs.current[idx];
-        if (v && v.paused) v.play().catch(() => {});
+        if (v && v.paused) v.play().catch((err) => logPlayError('touchstart', idx, v, err));
       }
     };
     container.addEventListener('touchstart', handleTouchPlay, { passive: true });
@@ -505,7 +520,7 @@ const Collection = ({ onBack }) => {
 
     if (videoIndex === index) {
       video.play().catch((err) => {
-        console.error('[Collection Live] Switch play failed:', err);
+        logPlayError('switch', videoIndex, video, err);
       });
     } else if (videoIndex === preloadIndex) {
       video.pause();

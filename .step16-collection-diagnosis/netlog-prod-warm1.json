@@ -1,0 +1,14 @@
+[
+ {
+  "url": "photo1.mp4",
+  "status": 206,
+  "cacheControl": "public, max-age=0, must-revalidate",
+  "etag": "\"8191027be48e6ef9c24b6f8587352b37\"",
+  "age": "325",
+  "xvercelcache": "HIT",
+  "contentLength": "293375",
+  "contentType": "video/mp4",
+  "fromDiskCache": false,
+  "fromServiceWorker": false
+ }
+]
