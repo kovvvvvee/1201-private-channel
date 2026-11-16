@@ -98,11 +98,6 @@ const recoverBirthdayBlobSource = (audio) => {
   revokeBirthdayBlobUrl();
   if (!birthdayPlaybackStarted && !birthdayPlayPromise) {
     audio.src = BIRTHDAY_AUDIO_SRC;
-    try {
-      audio.load();
-    } catch (error) {
-      reportBirthdayError('blob-fallback-load', error, audio);
-    }
   }
 };
 
@@ -128,12 +123,6 @@ const adoptBirthdayBlob = (audio) => {
   }
   if (audio.currentSrc !== birthdayPrefetch.blobUrl) {
     audio.src = birthdayPrefetch.blobUrl;
-    try {
-      audio.load();
-    } catch (error) {
-      reportBirthdayError('blob-load', error, audio);
-      return false;
-    }
   }
   return true;
 };
@@ -147,29 +136,16 @@ const maybeAdoptBirthdayBlob = () => {
   return adoptBirthdayBlob(audio);
 };
 
-const abortBirthdayPrefetch = () => {
-  if (birthdayPrefetch.status === 'loading' && birthdayPrefetch.controller) {
-    birthdayPrefetch.status = 'aborted';
-    try {
-      birthdayPrefetch.controller.abort();
-    } catch {
-      // 忽略 abort 失败
-    }
-  }
-};
-
 const ensureOriginalBirthdaySrc = (audio) => {
   if (!audio || audio.currentSrc || birthdayPlaybackStarted || birthdayPlayPromise) return;
   audio.src = BIRTHDAY_AUDIO_SRC;
-  try {
-    audio.load();
-  } catch (error) {
-    reportBirthdayError('src-load', error, audio);
-  }
 };
 
-// 播放路径上决定当前 src：优先已预热 Blob；否则在无 src 时中止 fetch 并回退原 URL。
-// 返回 true 表示本次调用设置了新的 src（已自行 load），调用方不再重复 reload。
+// 播放路径上决定当前 src：优先已预热 Blob；否则在无 src 时使用原 URL。
+// 只设置 src（浏览器自动开始加载），不在播放启动前后额外调用 load()，
+// 避免 load() 打断同一手势内的 play()。后台预热不被中止，完成后由
+// maybeAdoptBirthdayBlob() 在安全时机决定是否接管。
+// 返回 true 表示本次调用设置了新的 src，调用方不再重复 reload。
 const ensureBirthdaySrc = (audio) => {
   if (
     birthdayPrefetch.status === 'ready' &&
@@ -181,13 +157,7 @@ const ensureBirthdaySrc = (audio) => {
   }
 
   if (!audio.currentSrc) {
-    abortBirthdayPrefetch();
     audio.src = BIRTHDAY_AUDIO_SRC;
-    try {
-      audio.load();
-    } catch (error) {
-      reportBirthdayError('src-load', error, audio);
-    }
     return true;
   }
 
@@ -326,16 +296,17 @@ export const audioControl = {
     const ended = isBirthdayEnded(audio);
     const playing = birthdayPlaybackStarted && !audio.paused && !ended;
 
+    // 已在播放中的重复点击直接忽略，不重置 currentTime，避免打断/重播。
+    if (playing) {
+      return audio;
+    }
+
     if (audio.currentTime !== 0 && canSeekBirthday(audio)) {
       try {
         audio.currentTime = 0;
       } catch (error) {
         reportBirthdayError('seek', error, audio);
       }
-    }
-
-    if (playing) {
-      return audio;
     }
 
     try {
