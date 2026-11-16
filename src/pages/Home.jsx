@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { storage } from '../utils/storage';
+import { audioControl } from '../utils/audioControl';
 import Character from '../components/Character';
 import BottomNav from '../components/BottomNav';
 import KeyEasterEgg from '../components/KeyEasterEgg';
@@ -11,6 +12,11 @@ const Home = ({ onNavigate }) => {
   const [dialogue, setDialogue] = useState('');
   const [showDialogue, setShowDialogue] = useState(false);
   const dialogueTimerRef = useRef(null);
+
+  // 预加载 Key 音频（不播放，仅准备资源）
+  useEffect(() => {
+    audioControl.preloadBirthday();
+  }, []);
 
   const handleDialogue = (text) => {
     setDialogue(text);
