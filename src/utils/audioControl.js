@@ -1,10 +1,35 @@
 // 音频播放控制
 const BIRTHDAY_AUDIO_SRC = '/audio/birthday.mp3';
 
+const now = () => (
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now()
+);
+
+const birthdayTimings = {};
+const markBirthdayTiming = (name, detail) => {
+  if (birthdayTimings[name] !== undefined) return;
+  birthdayTimings[name] = now();
+  const suffix = detail ? ` ${detail}` : '';
+  console.info(`[birthday-timing] ${name} t=${birthdayTimings[name].toFixed(1)}${suffix}`);
+};
+
 let birthdayAudio = null;
 let birthdayPlayPromise = null;
 let birthdayPlaybackStarted = false;
 let birthdayLastError = null;
+
+// 首页挂载后主动 fetch 预热；成功后优先用 Blob URL 供单例 Audio 复用，
+// 避免首次点击时才开始网络下载。若用户在预热完成前点击，则中止 fetch 并
+// 回退到原 URL，保证点击手势内同步进入 play()。
+const birthdayPrefetch = {
+  status: 'idle', // idle | loading | ready | failed | aborted
+  blob: null,
+  blobUrl: null,
+  controller: null,
+  promise: null,
+};
 
 const birthdaySnapshot = (audio) => ({
   readyState: audio.readyState,
@@ -50,16 +75,141 @@ const needsBirthdayReload = (audio) => {
   return !!(audio.error || audio.networkState === 3);
 };
 
+const hasUsableBirthdaySrc = (audio) => {
+  return !!(audio.currentSrc && audio.networkState !== 0 && audio.networkState !== 3 && !audio.error);
+};
+
+const revokeBirthdayBlobUrl = () => {
+  if (birthdayPrefetch.blobUrl) {
+    try {
+      URL.revokeObjectURL(birthdayPrefetch.blobUrl);
+    } catch {
+      // 忽略 revoke 失败
+    }
+    birthdayPrefetch.blobUrl = null;
+  }
+};
+
+// Blob 源失败时回退到原 URL，避免单例 Audio 卡在 blob error 状态。
+const recoverBirthdayBlobSource = (audio) => {
+  if (!birthdayPrefetch.blobUrl || audio.currentSrc !== birthdayPrefetch.blobUrl) return;
+  birthdayPrefetch.status = 'failed';
+  birthdayPrefetch.blob = null;
+  revokeBirthdayBlobUrl();
+  if (!birthdayPlaybackStarted && !birthdayPlayPromise) {
+    audio.src = BIRTHDAY_AUDIO_SRC;
+    try {
+      audio.load();
+    } catch (error) {
+      reportBirthdayError('blob-fallback-load', error, audio);
+    }
+  }
+};
+
+// 只在原资源尚未成功接管时才允许用已预热的 Blob 替换 src；
+// 播放中、已加载或正在加载的原资源不替换，避免打断播放/重复下载。
+const canUseBirthdayBlob = (audio) => {
+  if (!birthdayPrefetch.blob) return false;
+  if (birthdayPrefetch.blobUrl && audio.currentSrc === birthdayPrefetch.blobUrl) return true;
+  if (!audio.currentSrc) return true;
+  return audio.networkState === 0 || audio.networkState === 3 || !!audio.error;
+};
+
+const adoptBirthdayBlob = (audio) => {
+  if (!birthdayPrefetch.blob) return false;
+  if (!birthdayPrefetch.blobUrl) {
+    try {
+      birthdayPrefetch.blobUrl = URL.createObjectURL(birthdayPrefetch.blob);
+    } catch (error) {
+      birthdayPrefetch.status = 'failed';
+      reportBirthdayError('blob-url', error, audio);
+      return false;
+    }
+  }
+  if (audio.currentSrc !== birthdayPrefetch.blobUrl) {
+    audio.src = birthdayPrefetch.blobUrl;
+    try {
+      audio.load();
+    } catch (error) {
+      reportBirthdayError('blob-load', error, audio);
+      return false;
+    }
+  }
+  return true;
+};
+
+const maybeAdoptBirthdayBlob = () => {
+  const audio = birthdayAudio;
+  if (!audio) return false;
+  if (birthdayPlayPromise || birthdayPlaybackStarted) return false;
+  if (birthdayPrefetch.status !== 'ready') return false;
+  if (!canUseBirthdayBlob(audio)) return false;
+  return adoptBirthdayBlob(audio);
+};
+
+const abortBirthdayPrefetch = () => {
+  if (birthdayPrefetch.status === 'loading' && birthdayPrefetch.controller) {
+    birthdayPrefetch.status = 'aborted';
+    try {
+      birthdayPrefetch.controller.abort();
+    } catch {
+      // 忽略 abort 失败
+    }
+  }
+};
+
+const ensureOriginalBirthdaySrc = (audio) => {
+  if (!audio || audio.currentSrc || birthdayPlaybackStarted || birthdayPlayPromise) return;
+  audio.src = BIRTHDAY_AUDIO_SRC;
+  try {
+    audio.load();
+  } catch (error) {
+    reportBirthdayError('src-load', error, audio);
+  }
+};
+
+// 播放路径上决定当前 src：优先已预热 Blob；否则在无 src 时中止 fetch 并回退原 URL。
+// 返回 true 表示本次调用设置了新的 src（已自行 load），调用方不再重复 reload。
+const ensureBirthdaySrc = (audio) => {
+  if (
+    birthdayPrefetch.status === 'ready' &&
+    birthdayPrefetch.blob &&
+    canUseBirthdayBlob(audio) &&
+    adoptBirthdayBlob(audio)
+  ) {
+    return true;
+  }
+
+  if (!audio.currentSrc) {
+    abortBirthdayPrefetch();
+    audio.src = BIRTHDAY_AUDIO_SRC;
+    try {
+      audio.load();
+    } catch (error) {
+      reportBirthdayError('src-load', error, audio);
+    }
+    return true;
+  }
+
+  return false;
+};
+
 const ensureBirthdayAudio = () => {
   if (birthdayAudio) return birthdayAudio;
 
   const audio = new Audio();
   audio.preload = 'auto';
-  audio.src = BIRTHDAY_AUDIO_SRC;
 
+  audio.addEventListener('loadedmetadata', () => {
+    markBirthdayTiming('loadedmetadata');
+  });
+  audio.addEventListener('canplay', () => {
+    markBirthdayTiming('canplay');
+  });
   audio.addEventListener('playing', () => {
     birthdayPlaybackStarted = true;
     birthdayLastError = null;
+    markBirthdayTiming('playing');
   });
   audio.addEventListener('pause', () => {
     birthdayPlaybackStarted = false;
@@ -72,6 +222,7 @@ const ensureBirthdayAudio = () => {
     birthdayPlaybackStarted = false;
     birthdayPlayPromise = null;
     reportBirthdayError('media-error', audio.error, audio);
+    recoverBirthdayBlobSource(audio);
   });
   audio.addEventListener('stalled', () => {
     console.warn('[audioControl] birthday audio stalled', birthdaySnapshot(audio));
@@ -90,20 +241,79 @@ const ensureBirthdayAudio = () => {
 };
 
 export const audioControl = {
-  // 预加载生日快乐语音（不播放）
+  // 首页挂载后主动预热生日音频：优先 fetch 得到可复用 Blob，
+  // 不依赖 preload='auto' 在移动端是否真正下载。
   preloadBirthday: () => {
-    return ensureBirthdayAudio();
+    const audio = ensureBirthdayAudio();
+    markBirthdayTiming('home-mounted');
+
+    if (hasUsableBirthdaySrc(audio)) {
+      return Promise.resolve(audio);
+    }
+    if (birthdayPrefetch.status === 'loading') {
+      return birthdayPrefetch.promise;
+    }
+    if (birthdayPrefetch.status === 'ready' && birthdayPrefetch.blob) {
+      maybeAdoptBirthdayBlob();
+      return Promise.resolve(birthdayPrefetch.blobUrl || audio);
+    }
+    if (birthdayPrefetch.status === 'aborted') {
+      return Promise.resolve(audio);
+    }
+
+    birthdayPrefetch.status = 'loading';
+    markBirthdayTiming('prefetch-start');
+    birthdayPrefetch.controller = new AbortController();
+    birthdayPrefetch.promise = fetch(BIRTHDAY_AUDIO_SRC, { signal: birthdayPrefetch.controller.signal })
+      .then(async (response) => {
+        if (birthdayPrefetch.status !== 'loading') return null;
+        if (!response || !response.ok) {
+          throw new Error(`HTTP ${response ? response.status : 'no-response'}`);
+        }
+        const contentType = response.headers.get('content-type') || '';
+        const blob = await response.blob();
+        if (!blob || blob.size === 0) {
+          throw new Error('empty audio body');
+        }
+        birthdayPrefetch.blob = blob;
+        birthdayPrefetch.status = 'ready';
+        birthdayPrefetch.controller = null;
+        markBirthdayTiming('prefetch-complete', `bytes=${blob.size} type=${contentType}`);
+        maybeAdoptBirthdayBlob();
+        return birthdayPrefetch.blobUrl || audio;
+      })
+      .catch((error) => {
+        if (birthdayPrefetch.status === 'aborted' || (error && error.name === 'AbortError')) {
+          if (birthdayPrefetch.status === 'loading') birthdayPrefetch.status = 'aborted';
+          return null;
+        }
+        birthdayPrefetch.status = 'failed';
+        birthdayPrefetch.controller = null;
+        markBirthdayTiming('prefetch-complete', `failed=${error && error.message}`);
+        reportBirthdayError('prefetch', error, audio);
+        ensureOriginalBirthdaySrc(audio);
+        return null;
+      })
+      .finally(() => {
+        birthdayPrefetch.controller = null;
+      });
+
+    return birthdayPrefetch.promise;
   },
 
-  // 播放生日快乐语音（复用预加载实例）
+  // 播放生日快乐语音（复用单例实例；点击手势内同步进入播放启动流程）
   playBirthday: () => {
     const audio = ensureBirthdayAudio();
+    markBirthdayTiming('first-key-click');
 
+    // 上一次 play() Promise 尚未完成时合并本次点击，避免并发播放流程互相覆盖。
     if (birthdayPlayPromise) {
       return audio;
     }
 
-    if (needsBirthdayReload(audio)) {
+    const srcChanged = ensureBirthdaySrc(audio);
+
+    if (!srcChanged && needsBirthdayReload(audio)) {
       birthdayPlaybackStarted = false;
       birthdayPlayPromise = null;
       try {
@@ -129,6 +339,7 @@ export const audioControl = {
     }
 
     try {
+      markBirthdayTiming('play-called', `readyState=${audio.readyState} networkState=${audio.networkState} src=${birthdayPrefetch.blobUrl && audio.currentSrc === birthdayPrefetch.blobUrl ? 'blob' : 'remote'}`);
       const result = audio.play();
       const promise = result && typeof result.then === 'function'
         ? result
