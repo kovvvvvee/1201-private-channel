@@ -19,6 +19,7 @@ let birthdayAudio = null;
 let birthdayPlayPromise = null;
 let birthdayPlaybackStarted = false;
 let birthdayLastError = null;
+let globalInteractionHandlerRegistered = false;
 
 // 首页挂载后主动 fetch 预热；成功后优先用 Blob URL 供单例 Audio 复用，
 // 避免首次点击时才开始网络下载。若用户在预热完成前点击，则中止 fetch 并
@@ -216,6 +217,26 @@ export const audioControl = {
   preloadBirthday: () => {
     const audio = ensureBirthdayAudio();
     markBirthdayTiming('home-mounted');
+
+    // 注册全局交互处理器，首次用户点击时唤醒音频上下文
+    if (!globalInteractionHandlerRegistered) {
+      globalInteractionHandlerRegistered = true;
+      const wakeUpAudioContext = () => {
+        try {
+          if (audio && audio.readyState === 0) {
+            audio.load();
+            markBirthdayTiming('global-interaction-wake');
+          }
+        } catch (err) {
+          console.warn('[audioControl] Global interaction wake failed:', err);
+        }
+        // 移除处理器，只需执行一次
+        document.removeEventListener('touchstart', wakeUpAudioContext);
+        document.removeEventListener('click', wakeUpAudioContext);
+      };
+      document.addEventListener('touchstart', wakeUpAudioContext, { passive: true, once: true });
+      document.addEventListener('click', wakeUpAudioContext, { passive: true, once: true });
+    }
 
     if (hasUsableBirthdaySrc(audio)) {
       return Promise.resolve(audio);

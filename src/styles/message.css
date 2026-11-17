@@ -13,8 +13,13 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: url('/letter/message-bg.webp') center/cover no-repeat;
+  background-color: #1a162e; /* Fallback dark background */
+  background-image: url('/letter/message-bg.webp');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   position: relative;
+  transition: background-image 0.3s ease;
 }
 
 /* 半透明遮罩 */

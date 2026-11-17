@@ -306,11 +306,22 @@ const Collection = ({ onBack }) => {
     return video;
   };
 
-  // ===== 按需加载卡片图片（放宽队列：预加载前3张，避免移动端白屏） =====
+  // ===== 检测是否为移动端 =====
+  const isMobile = () => {
+    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  // ===== 按需加载卡片图片（移动端串行加载，桌面端预加载3张） =====
   const loadWindowMedia = (index) => {
     const total = photos.length;
-    // 预加载当前及前后各1张（共3张），放宽移动端加载条件
-    const order = [index, (index + 1) % total, (index - 1 + total) % total];
+    const mobile = isMobile();
+
+    // 移动端：只加载当前1张
+    // 桌面端：预加载当前及前后各1张（共3张）
+    const order = mobile
+      ? [index]
+      : [index, (index + 1) % total, (index - 1 + total) % total];
+
     order.forEach((i, orderIdx) => {
       const card = cardsRef.current[i];
       const img = card && card.querySelector('.media-container img');
@@ -318,8 +329,8 @@ const Collection = ({ onBack }) => {
         if (orderIdx === 0) {
           img.setAttribute('fetchpriority', 'high');
           img.removeAttribute('loading');
-        } else {
-          // 预加载的相邻卡片也移除 lazy，确保移动端可见性
+        } else if (!mobile) {
+          // 桌面端预加载的相邻卡片也移除 lazy
           img.removeAttribute('loading');
         }
         img.src = img.dataset.src;
@@ -396,11 +407,12 @@ const Collection = ({ onBack }) => {
       }
     });
     setCurrentIndex(0);
-    // 初始化时预加载前3张图片，避免移动端第二次进入白屏
+    // 移动端只加载当前1张，桌面端预加载前3张
     loadWindowMedia(0);
-    // 预加载第2张和第3张
-    setTimeout(() => loadWindowMedia(1), 100);
-    setTimeout(() => loadWindowMedia(2), 200);
+    if (!isMobile()) {
+      setTimeout(() => loadWindowMedia(1), 100);
+      setTimeout(() => loadWindowMedia(2), 200);
+    }
 
     if (initialPlayTimerRef.current) {
       clearTimeout(initialPlayTimerRef.current);
