@@ -217,6 +217,7 @@ export const audioControl = {
   preloadBirthday: () => {
     const audio = ensureBirthdayAudio();
     markBirthdayTiming('home-mounted');
+    console.log('[audioControl] preloadBirthday called, readyState:', audio.readyState);
 
     // 注册全局交互处理器，首次用户点击时唤醒音频上下文
     if (!globalInteractionHandlerRegistered) {
@@ -226,6 +227,7 @@ export const audioControl = {
           if (audio && audio.readyState === 0) {
             audio.load();
             markBirthdayTiming('global-interaction-wake');
+            console.log('[audioControl] Audio context woken up by global interaction');
           }
         } catch (err) {
           console.warn('[audioControl] Global interaction wake failed:', err);
@@ -236,24 +238,30 @@ export const audioControl = {
       };
       document.addEventListener('touchstart', wakeUpAudioContext, { passive: true, once: true });
       document.addEventListener('click', wakeUpAudioContext, { passive: true, once: true });
+      console.log('[audioControl] Global interaction handler registered');
     }
 
     if (hasUsableBirthdaySrc(audio)) {
+      console.log('[audioControl] Audio already has usable src');
       return Promise.resolve(audio);
     }
     if (birthdayPrefetch.status === 'loading') {
+      console.log('[audioControl] Prefetch already in progress');
       return birthdayPrefetch.promise;
     }
     if (birthdayPrefetch.status === 'ready' && birthdayPrefetch.blob) {
       maybeAdoptBirthdayBlob();
+      console.log('[audioControl] Using preloaded blob');
       return Promise.resolve(birthdayPrefetch.blobUrl || audio);
     }
     if (birthdayPrefetch.status === 'aborted') {
+      console.log('[audioControl] Prefetch was aborted, using original src');
       return Promise.resolve(audio);
     }
 
     birthdayPrefetch.status = 'loading';
     markBirthdayTiming('prefetch-start');
+    console.log('[audioControl] Starting prefetch:', BIRTHDAY_AUDIO_SRC);
     birthdayPrefetch.controller = new AbortController();
     birthdayPrefetch.promise = fetch(BIRTHDAY_AUDIO_SRC, { signal: birthdayPrefetch.controller.signal })
       .then(async (response) => {
@@ -296,15 +304,19 @@ export const audioControl = {
   playBirthday: () => {
     const audio = ensureBirthdayAudio();
     markBirthdayTiming('first-key-click');
+    console.log('[audioControl] playBirthday called, readyState:', audio.readyState, 'paused:', audio.paused);
 
     // 上一次 play() Promise 尚未完成时合并本次点击，避免并发播放流程互相覆盖。
     if (birthdayPlayPromise) {
+      console.log('[audioControl] Play already in progress, ignoring click');
       return audio;
     }
 
     const srcChanged = ensureBirthdaySrc(audio);
+    console.log('[audioControl] srcChanged:', srcChanged, 'currentSrc:', audio.currentSrc);
 
     if (!srcChanged && needsBirthdayReload(audio)) {
+      console.log('[audioControl] Reloading audio due to error state');
       birthdayPlaybackStarted = false;
       birthdayPlayPromise = null;
       try {
@@ -319,6 +331,7 @@ export const audioControl = {
 
     // 已在播放中的重复点击直接忽略，不重置 currentTime，避免打断/重播。
     if (playing) {
+      console.log('[audioControl] Already playing, ignoring click');
       return audio;
     }
 
@@ -333,10 +346,12 @@ export const audioControl = {
     // 用户交互兜底：确保 Audio 处于可播放状态
     if (audio.readyState < 2) {
       markBirthdayTiming('ready-state-low', `readyState=${audio.readyState}`);
+      console.log('[audioControl] readyState low:', audio.readyState);
     }
 
     try {
       markBirthdayTiming('play-called', `readyState=${audio.readyState} networkState=${audio.networkState} src=${birthdayPrefetch.blobUrl && audio.currentSrc === birthdayPrefetch.blobUrl ? 'blob' : 'remote'}`);
+      console.log('[audioControl] Calling audio.play()');
       const result = audio.play();
       const promise = result && typeof result.then === 'function'
         ? result
@@ -350,6 +365,7 @@ export const audioControl = {
             birthdayPlayPromise = null;
             birthdayPlaybackStarted = !audio.paused && !isBirthdayEnded(audio);
             birthdayLastError = null;
+            console.log('[audioControl] Play succeeded');
           }
         },
         (error) => {
@@ -357,6 +373,7 @@ export const audioControl = {
             birthdayPlayPromise = null;
             birthdayPlaybackStarted = false;
             reportBirthdayError('play-rejected', error, audio);
+            console.error('[audioControl] Play rejected:', error.name, error.message);
 
             // 移动端兜底：如果被浏览器策略阻止，尝试在用户手势下重试
             if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {

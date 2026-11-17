@@ -314,11 +314,15 @@ const Collection = ({ onBack }) => {
     const img = card && card.querySelector('.media-container img');
     if (!img || img.getAttribute('src') || !img.dataset.src) return;
 
+    const imageUrl = img.dataset.src;
+    console.log('[Collection] Chain loading image:', index, imageUrl);
+
     img.setAttribute('fetchpriority', 'high');
     img.removeAttribute('loading');
 
     // 监听加载成功，触发下一张
     img.onload = () => {
+      console.log('[Collection] Image loaded successfully:', index, imageUrl);
       chainLoadIndex.current = index + 1;
       // 下一张预加载
       const nextIndex = (index + 1) % photos.length;
@@ -328,7 +332,7 @@ const Collection = ({ onBack }) => {
     };
 
     img.onerror = () => {
-      console.warn('[Collection] Image load failed:', index);
+      console.error('[Collection] Image load failed:', index, imageUrl);
       // 失败也继续下一张
       const nextIndex = (index + 1) % photos.length;
       if (nextIndex !== 0) {
@@ -344,6 +348,8 @@ const Collection = ({ onBack }) => {
     const card = cardsRef.current[index];
     const img = card && card.querySelector('.media-container img');
     if (img && !img.getAttribute('src') && img.dataset.src) {
+      const imageUrl = img.dataset.src;
+      console.log('[Collection] Loading current image:', index, imageUrl);
       img.setAttribute('fetchpriority', 'high');
       img.removeAttribute('loading');
       img.src = img.dataset.src;
