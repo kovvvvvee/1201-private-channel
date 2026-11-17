@@ -12,7 +12,6 @@
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  transition: background-image 0.3s ease;
 }
 
 /* 聊天背景遮罩 - 让文字清晰可读 */

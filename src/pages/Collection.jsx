@@ -394,9 +394,16 @@ const Collection = ({ onBack }) => {
 
       // 图片延迟赋 src：只加载当前卡附近的图片，避免首次进入一次性拉取全部 9 张
       const img = document.createElement('img');
-      img.dataset.src = item.photo;
+      if (i === 0) {
+        // 首张图片直接渲染，避免死锁
+        img.src = item.photo;
+        img.setAttribute('fetchpriority', 'high');
+      } else {
+        // 其他图片使用 dataset.src + lazy
+        img.dataset.src = item.photo;
+        img.loading = 'lazy';
+      }
       img.alt = `照片${i+1}`;
-      img.loading = 'lazy';
       img.style.cssText = `
         width: 100%;
         height: 100%;
@@ -419,9 +426,9 @@ const Collection = ({ onBack }) => {
       }
     });
     setCurrentIndex(0);
-    // 链式加载：从第1张开始，加载成功后自动触发第2张
-    chainLoadIndex.current = 0;
-    loadImageWithChain(0);
+    // 链式加载：首张图片已直接渲染，从第2张开始链式加载
+    chainLoadIndex.current = 1;
+    loadImageWithChain(1);
 
     if (initialPlayTimerRef.current) {
       clearTimeout(initialPlayTimerRef.current);
