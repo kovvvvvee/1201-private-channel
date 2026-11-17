@@ -309,6 +309,11 @@ export const audioControl = {
       }
     }
 
+    // 用户交互兜底：确保 Audio 处于可播放状态
+    if (audio.readyState < 2) {
+      markBirthdayTiming('ready-state-low', `readyState=${audio.readyState}`);
+    }
+
     try {
       markBirthdayTiming('play-called', `readyState=${audio.readyState} networkState=${audio.networkState} src=${birthdayPrefetch.blobUrl && audio.currentSrc === birthdayPrefetch.blobUrl ? 'blob' : 'remote'}`);
       const result = audio.play();
@@ -331,6 +336,22 @@ export const audioControl = {
             birthdayPlayPromise = null;
             birthdayPlaybackStarted = false;
             reportBirthdayError('play-rejected', error, audio);
+
+            // 移动端兜底：如果被浏览器策略阻止，尝试在用户手势下重试
+            if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
+              markBirthdayTiming('play-rejected-retry');
+              setTimeout(() => {
+                if (!birthdayPlayPromise && !birthdayPlaybackStarted) {
+                  try {
+                    audio.play().catch((retryErr) => {
+                      console.warn('[audioControl] Retry play failed:', retryErr);
+                    });
+                  } catch (retryErr) {
+                    console.warn('[audioControl] Retry play threw:', retryErr);
+                  }
+                }
+              }, 50);
+            }
           }
         }
       );

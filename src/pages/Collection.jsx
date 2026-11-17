@@ -14,6 +14,7 @@ const Collection = ({ onBack }) => {
   const currentIndexRef = useRef(0);
   const commentTimerRef = useRef(null);
   const initialPlayTimerRef = useRef(null);
+  const videoPlayLocks = useRef({});
 
 
   const companionMessages = [
@@ -238,7 +239,21 @@ const Collection = ({ onBack }) => {
 
     const tryPlayIfCurrent = () => {
       if (index === currentIndexRef.current && video.paused) {
-        video.play().catch(() => {});
+        const lockKey = `${index}-play`;
+        if (videoPlayLocks.current[lockKey]) return;
+        videoPlayLocks.current[lockKey] = true;
+
+        video.play()
+          .catch((err) => {
+            if (err.name === 'AbortError') {
+              console.warn('[Collection Live] Play aborted (expected during switch):', index);
+            } else {
+              console.error('[Collection Live] Play failed:', index, err);
+            }
+          })
+          .finally(() => {
+            videoPlayLocks.current[lockKey] = false;
+          });
       }
     };
     addEventHandler('canplay', tryPlayIfCurrent);
@@ -298,7 +313,10 @@ const Collection = ({ onBack }) => {
       const card = cardsRef.current[i];
       const img = card && card.querySelector('.media-container img');
       if (img && !img.getAttribute('src') && img.dataset.src) {
-        if (orderIdx === 0) img.setAttribute('fetchpriority', 'high');
+        if (orderIdx === 0) {
+          img.setAttribute('fetchpriority', 'high');
+          img.removeAttribute('loading');
+        }
         img.src = img.dataset.src;
       }
     });
@@ -350,6 +368,7 @@ const Collection = ({ onBack }) => {
       const img = document.createElement('img');
       img.dataset.src = item.photo;
       img.alt = `照片${i+1}`;
+      img.loading = 'lazy';
       img.style.cssText = `
         width: 100%;
         height: 100%;
@@ -383,9 +402,21 @@ const Collection = ({ onBack }) => {
       if (firstPhoto && firstPhoto.isLive) {
         const firstVideo = createVideoForCard(0);
         if (firstVideo) {
-          firstVideo.play().catch((err) => {
-            console.error('[Collection Live] Initial play failed:', err);
-          });
+          const lockKey = '0-init-play';
+          if (!videoPlayLocks.current[lockKey]) {
+            videoPlayLocks.current[lockKey] = true;
+            firstVideo.play()
+              .catch((err) => {
+                if (err.name === 'AbortError') {
+                  console.warn('[Collection Live] Initial play aborted (expected):', err);
+                } else {
+                  console.error('[Collection Live] Initial play failed:', err);
+                }
+              })
+              .finally(() => {
+                videoPlayLocks.current[lockKey] = false;
+              });
+          }
         }
       }
     }, 500);
@@ -415,7 +446,23 @@ const Collection = ({ onBack }) => {
       const item = photos[idx];
       if (item && item.isLive) {
         const v = videoRefs.current[idx];
-        if (v && v.paused) v.play().catch(() => {});
+        if (v && v.paused) {
+          const lockKey = `${idx}-touch-play`;
+          if (!videoPlayLocks.current[lockKey]) {
+            videoPlayLocks.current[lockKey] = true;
+            v.play()
+              .catch((err) => {
+                if (err.name === 'AbortError') {
+                  console.warn('[Collection Live] Touch play aborted (expected):', err);
+                } else {
+                  console.error('[Collection Live] Touch play failed:', err);
+                }
+              })
+              .finally(() => {
+                videoPlayLocks.current[lockKey] = false;
+              });
+          }
+        }
       }
     };
     container.addEventListener('touchstart', handleTouchPlay, { passive: true });
@@ -427,6 +474,7 @@ const Collection = ({ onBack }) => {
   }
 
   cleanupAllVideos();
+  videoPlayLocks.current = {};
 
   container.removeEventListener('touchstart', handleTouchStart);
   container.removeEventListener('touchend', handleTouchEnd);
@@ -504,9 +552,21 @@ const Collection = ({ onBack }) => {
     if (!video) return;
 
     if (videoIndex === index) {
-      video.play().catch((err) => {
-        console.error('[Collection Live] Switch play failed:', err);
-      });
+      const lockKey = `${index}-switch-play`;
+      if (!videoPlayLocks.current[lockKey]) {
+        videoPlayLocks.current[lockKey] = true;
+        video.play()
+          .catch((err) => {
+            if (err.name === 'AbortError') {
+              console.warn('[Collection Live] Switch play aborted (expected):', index, err);
+            } else {
+              console.error('[Collection Live] Switch play failed:', index, err);
+            }
+          })
+          .finally(() => {
+            videoPlayLocks.current[lockKey] = false;
+          });
+      }
     } else if (videoIndex === preloadIndex) {
       video.pause();
     } else {
