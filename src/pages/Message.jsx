@@ -16,19 +16,11 @@ const Message = ({ onBack }) => {
     "好像……是给你的。"
   ];
 
-  // 预加载背景图、信封与信纸（添加错误处理，确保预加载失败不影响交互）
+  // 预加载背景图、信封与信纸
   useEffect(() => {
-    const preloadImages = ['/letter/message-bg.webp', '/letter/envelope.webp', '/letter/letter.webp'];
-    preloadImages.forEach(src => {
-      try {
-        const img = new Image();
-        img.onerror = () => {
-          console.warn('[Message] Preload failed:', src);
-        };
-        img.src = src;
-      } catch (err) {
-        console.warn('[Message] Preload error:', src, err);
-      }
+    ['/letter/message-bg.webp', '/letter/envelope.webp', '/letter/letter.webp'].forEach(src => {
+      const img = new Image();
+      img.src = src;
     });
   }, []);
 

@@ -15,7 +15,7 @@ const Collection = ({ onBack }) => {
   const commentTimerRef = useRef(null);
   const initialPlayTimerRef = useRef(null);
   const videoPlayLocks = useRef({});
-  const videoRetryTimers = useRef({});
+  const chainLoadIndex = useRef(0); // 链式加载索引
 
 
   const companionMessages = [
@@ -306,36 +306,48 @@ const Collection = ({ onBack }) => {
     return video;
   };
 
-  // ===== 检测是否为移动端 =====
-  const isMobile = () => {
-    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // ===== 链式加载图片：第 i 张加载成功后触发第 i+1 张 =====
+  const loadImageWithChain = (index) => {
+    if (index >= photos.length) return;
+
+    const card = cardsRef.current[index];
+    const img = card && card.querySelector('.media-container img');
+    if (!img || img.getAttribute('src') || !img.dataset.src) return;
+
+    img.setAttribute('fetchpriority', 'high');
+    img.removeAttribute('loading');
+
+    // 监听加载成功，触发下一张
+    img.onload = () => {
+      chainLoadIndex.current = index + 1;
+      // 下一张预加载
+      const nextIndex = (index + 1) % photos.length;
+      if (nextIndex !== 0) { // 不循环到第一张
+        setTimeout(() => loadImageWithChain(nextIndex), 100);
+      }
+    };
+
+    img.onerror = () => {
+      console.warn('[Collection] Image load failed:', index);
+      // 失败也继续下一张
+      const nextIndex = (index + 1) % photos.length;
+      if (nextIndex !== 0) {
+        setTimeout(() => loadImageWithChain(nextIndex), 100);
+      }
+    };
+
+    img.src = img.dataset.src;
   };
 
-  // ===== 按需加载卡片图片（移动端串行加载，桌面端预加载3张） =====
-  const loadWindowMedia = (index) => {
-    const total = photos.length;
-    const mobile = isMobile();
-
-    // 移动端：只加载当前1张
-    // 桌面端：预加载当前及前后各1张（共3张）
-    const order = mobile
-      ? [index]
-      : [index, (index + 1) % total, (index - 1 + total) % total];
-
-    order.forEach((i, orderIdx) => {
-      const card = cardsRef.current[i];
-      const img = card && card.querySelector('.media-container img');
-      if (img && !img.getAttribute('src') && img.dataset.src) {
-        if (orderIdx === 0) {
-          img.setAttribute('fetchpriority', 'high');
-          img.removeAttribute('loading');
-        } else if (!mobile) {
-          // 桌面端预加载的相邻卡片也移除 lazy
-          img.removeAttribute('loading');
-        }
-        img.src = img.dataset.src;
-      }
-    });
+  // ===== 按需加载当前卡片图片（链式加载） =====
+  const loadCurrentImage = (index) => {
+    const card = cardsRef.current[index];
+    const img = card && card.querySelector('.media-container img');
+    if (img && !img.getAttribute('src') && img.dataset.src) {
+      img.setAttribute('fetchpriority', 'high');
+      img.removeAttribute('loading');
+      img.src = img.dataset.src;
+    }
   };
 
   // ===== 初始化卡片堆叠（使用 video 实况） =====
@@ -407,12 +419,9 @@ const Collection = ({ onBack }) => {
       }
     });
     setCurrentIndex(0);
-    // 移动端只加载当前1张，桌面端预加载前3张
-    loadWindowMedia(0);
-    if (!isMobile()) {
-      setTimeout(() => loadWindowMedia(1), 100);
-      setTimeout(() => loadWindowMedia(2), 200);
-    }
+    // 链式加载：从第1张开始，加载成功后自动触发第2张
+    chainLoadIndex.current = 0;
+    loadImageWithChain(0);
 
     if (initialPlayTimerRef.current) {
       clearTimeout(initialPlayTimerRef.current);
@@ -496,8 +505,6 @@ const Collection = ({ onBack }) => {
 
   cleanupAllVideos();
   videoPlayLocks.current = {};
-  Object.values(videoRetryTimers.current).forEach(timer => clearTimeout(timer));
-  videoRetryTimers.current = {};
 
   container.removeEventListener('touchstart', handleTouchStart);
   container.removeEventListener('touchend', handleTouchEnd);
@@ -550,7 +557,12 @@ const Collection = ({ onBack }) => {
 
     currentIndexRef.current = index;
     setCurrentIndex(index);
-    loadWindowMedia(index);
+    // 立即加载当前卡片图片
+    loadCurrentImage(index);
+    // 如果当前卡片还未被链式加载到，继续链式加载
+    if (index >= chainLoadIndex.current) {
+      loadImageWithChain(index);
+    }
 
     setIsSwitching(true);
     setTimeout(() => setIsSwitching(false), 600);
@@ -584,17 +596,6 @@ const Collection = ({ onBack }) => {
               console.warn('[Collection Live] Switch play aborted (expected):', index, err);
             } else {
               console.error('[Collection Live] Switch play failed:', index, err);
-              // 自动重试播放（移动端兜底）
-              if (!videoRetryTimers.current[index]) {
-                videoRetryTimers.current[index] = setTimeout(() => {
-                  if (video && video.paused && index === currentIndexRef.current) {
-                    video.play().catch((retryErr) => {
-                      console.warn('[Collection Live] Retry play failed:', index, retryErr);
-                    });
-                  }
-                  delete videoRetryTimers.current[index];
-                }, 200);
-              }
             }
           })
           .finally(() => {
