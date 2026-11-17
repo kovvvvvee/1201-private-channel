@@ -5,6 +5,7 @@ import '../styles/keyEasterEgg.css';
 
 const KeyEasterEgg = () => {
   const [isBlinking, setIsBlinking] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
 
   useEffect(() => {
     // 首次进入时闪烁3次
@@ -17,6 +18,16 @@ const KeyEasterEgg = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // 预热音频并监听就绪状态
+    audioControl.preloadBirthday().then(() => {
+      setAudioReady(true);
+    }).catch(() => {
+      // 预热失败也视为就绪（可以点击后直接播放）
+      setAudioReady(true);
+    });
+  }, []);
+
   const handleClick = () => {
     audioControl.playBirthday();
     storage.setKeyFound(true);
@@ -24,10 +35,11 @@ const KeyEasterEgg = () => {
 
   return (
     <div
-      className={`hidden-key ${isBlinking ? 'blinking' : ''}`}
+      className={`hidden-key ${isBlinking ? 'blinking' : ''} ${audioReady ? 'audio-ready' : ''}`}
       onClick={handleClick}
     >
       <img src="/icons/key.webp" alt="钥匙" />
+      {audioReady && <div className="audio-ready-indicator" />}
     </div>
   );
 };
