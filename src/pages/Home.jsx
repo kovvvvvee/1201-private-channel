@@ -14,8 +14,21 @@ const Home = ({ onNavigate }) => {
   const dialogueTimerRef = useRef(null);
 
   // 预加载 Key 音频（不播放，仅准备资源）
+  // 延迟到 window.load 之后，避免与首屏渲染抢跑
   useEffect(() => {
-    audioControl.preloadBirthday();
+    const preloadAudio = () => {
+      audioControl.preloadBirthday();
+    };
+
+    if (document.readyState === 'complete') {
+      // 页面已加载完成，延迟 500ms 后预热
+      setTimeout(preloadAudio, 500);
+    } else {
+      // 等待 window.load 事件
+      window.addEventListener('load', () => {
+        setTimeout(preloadAudio, 500);
+      }, { once: true });
+    }
   }, []);
 
   const handleDialogue = (text) => {

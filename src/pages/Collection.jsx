@@ -16,6 +16,7 @@ const Collection = ({ onBack }) => {
   const initialPlayTimerRef = useRef(null);
   const videoPlayLocks = useRef({});
   const chainLoadIndex = useRef(0); // 链式加载索引
+  const videoPlayDebounceTimer = useRef(null); // 视频播放防抖定时器
 
 
   const companionMessages = [
@@ -324,19 +325,19 @@ const Collection = ({ onBack }) => {
     img.onload = () => {
       console.log('[Collection] Image loaded successfully:', index, imageUrl);
       chainLoadIndex.current = index + 1;
-      // 下一张预加载
+      // 下一张预加载（延时 200ms 让出主线程）
       const nextIndex = (index + 1) % photos.length;
       if (nextIndex !== 0) { // 不循环到第一张
-        setTimeout(() => loadImageWithChain(nextIndex), 100);
+        setTimeout(() => loadImageWithChain(nextIndex), 200);
       }
     };
 
     img.onerror = () => {
       console.error('[Collection] Image load failed:', index, imageUrl);
-      // 失败也继续下一张
+      // 失败也继续下一张（延时 200ms 让出主线程）
       const nextIndex = (index + 1) % photos.length;
       if (nextIndex !== 0) {
-        setTimeout(() => loadImageWithChain(nextIndex), 100);
+        setTimeout(() => loadImageWithChain(nextIndex), 200);
       }
     };
 
@@ -600,21 +601,27 @@ const Collection = ({ onBack }) => {
     if (!video) return;
 
     if (videoIndex === index) {
-      const lockKey = `${index}-switch-play`;
-      if (!videoPlayLocks.current[lockKey]) {
-        videoPlayLocks.current[lockKey] = true;
-        video.play()
-          .catch((err) => {
-            if (err.name === 'AbortError') {
-              console.warn('[Collection Live] Switch play aborted (expected):', index, err);
-            } else {
-              console.error('[Collection Live] Switch play failed:', index, err);
-            }
-          })
-          .finally(() => {
-            videoPlayLocks.current[lockKey] = false;
-          });
+      // 延迟播放，等待滚动静止（防抖 300ms）
+      if (videoPlayDebounceTimer.current) {
+        clearTimeout(videoPlayDebounceTimer.current);
       }
+      videoPlayDebounceTimer.current = setTimeout(() => {
+        const lockKey = `${index}-switch-play`;
+        if (!videoPlayLocks.current[lockKey]) {
+          videoPlayLocks.current[lockKey] = true;
+          video.play()
+            .catch((err) => {
+              if (err.name === 'AbortError') {
+                console.warn('[Collection Live] Switch play aborted (expected):', index, err);
+              } else {
+                console.error('[Collection Live] Switch play failed:', index, err);
+              }
+            })
+            .finally(() => {
+              videoPlayLocks.current[lockKey] = false;
+            });
+        }
+      }, 300);
     } else if (videoIndex === preloadIndex) {
       video.pause();
     } else {
