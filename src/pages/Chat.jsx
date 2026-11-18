@@ -45,6 +45,22 @@ const Chat = ({ onBack }) => {
     }
   }, [messages]);
 
+  // ===== DIAG: image resource probe (read-only, no render impact) =====
+  useEffect(() => {
+    const probe = (src, tag) => {
+      const img = new Image();
+      const t0 = performance.now();
+      img.onload = () => console.log('[ChatDiag] ' + tag + ' loaded', src,
+        (performance.now() - t0).toFixed(0) + 'ms', img.naturalWidth + 'x' + img.naturalHeight);
+      img.onerror = () => console.error('[ChatDiag] ' + tag + ' failed', src,
+        (performance.now() - t0).toFixed(0) + 'ms');
+      img.src = src;
+    };
+    probe('/chat/chat-bg.webp', 'chat-bg');
+    probe('/avatars/xinghui-avatar.webp', 'avatar-xinghui');
+    probe('/avatars/user-avatar.webp', 'avatar-user');
+  }, []);
+
   // ===== 系统提示词 =====
   const systemPrompt = `# 角色定位
 

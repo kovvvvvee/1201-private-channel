@@ -169,7 +169,19 @@ const Message = ({ onBack }) => {
               src="/letter/envelope.webp"
               alt="信封"
               className="envelope-image"
-              onError={(e) => { e.target.src = '/letter/envelope.png'; }}
+              onLoad={(e) => {
+                console.log('[Message] Envelope loaded:', e.target.src,
+                  `${e.target.naturalWidth}x${e.target.naturalHeight}`);
+              }}
+              onError={(e) => {
+                if (!e.target.dataset.fallbackTried) {
+                  e.target.dataset.fallbackTried = '1';
+                  console.error('[Message] Envelope webp failed, fallback to png:', e.target.src);
+                  e.target.src = '/letter/envelope.png';
+                } else {
+                  console.error('[Message] Envelope png fallback also failed:', e.target.src);
+                }
+              }}
             />
           </div>
         )}

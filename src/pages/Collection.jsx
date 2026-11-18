@@ -254,67 +254,40 @@ const Collection = ({ onBack }) => {
       eventHandlers.push({ event, handler });
     };
 
-    addEventHandler('loadedmetadata', () => {
-      const data = {
+    const logVideoState = (event) => {
+      console.log('[Collection Live]', event, {
         index,
-        src: item.video,
+        currentSrc: video.currentSrc,
         readyState: video.readyState,
-        networkState: video.networkState
-      };
-    });
+        networkState: video.networkState,
+        paused: video.paused,
+        errorCode: video.error?.code,
+        errorMessage: video.error?.message,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight
+      });
+    };
 
-    addEventHandler('loadeddata', () => {
-      const data = {
-        index,
-        src: item.video,
-        readyState: video.readyState,
-        networkState: video.networkState
-      };
-    });
+    addEventHandler('loadedmetadata', () => logVideoState('loadedmetadata'));
+    addEventHandler('loadeddata', () => logVideoState('loadeddata'));
 
     const tryPlayIfCurrent = () => {
       safePlayVideo(index, video, `${index}-auto-play`);
     };
-    addEventHandler('canplay', tryPlayIfCurrent);
+    addEventHandler('canplay', () => { logVideoState('canplay'); tryPlayIfCurrent(); });
     addEventHandler('loadeddata', tryPlayIfCurrent);
 
-    addEventHandler('playing', () => {
-      const data = {
-        index,
-        src: item.video,
-        readyState: video.readyState,
-        networkState: video.networkState
-      };
-    });
-
-    addEventHandler('waiting', () => {
-      const data = {
-        index,
-        src: item.video,
-        readyState: video.readyState,
-        networkState: video.networkState
-      };
-    });
-
-    addEventHandler('stalled', () => {
-      const data = {
-        index,
-        src: item.video,
-        readyState: video.readyState,
-        networkState: video.networkState
-      };
-    });
+    addEventHandler('playing', () => logVideoState('playing'));
+    addEventHandler('waiting', () => logVideoState('waiting'));
+    addEventHandler('stalled', () => logVideoState('stalled'));
 
     addEventHandler('error', () => {
-      const data = {
+      logVideoState('error');
+      console.error('[Collection Live] error detail:', {
         index,
-        src: item.video,
-        readyState: video.readyState,
-        networkState: video.networkState,
         errorCode: video.error?.code,
         errorMessage: video.error?.message
-      };
-      console.error('[Collection Live] error:', data);
+      });
     });
 
     video._eventHandlers = eventHandlers;
@@ -367,9 +340,23 @@ const Collection = ({ onBack }) => {
     const img = card && card.querySelector('.media-container img');
     if (img && !img.getAttribute('src') && img.dataset.src) {
       const imageUrl = img.dataset.src;
+      const t0 = performance.now();
       console.log('[Collection] Loading current image:', index, imageUrl);
       img.setAttribute('fetchpriority', 'high');
       img.removeAttribute('loading');
+      img.onload = () => {
+        console.log('[Collection] Current image loaded:', index, imageUrl,
+          `${(performance.now() - t0).toFixed(0)}ms`,
+          `${img.naturalWidth}x${img.naturalHeight}`);
+        if (img.decode) {
+          img.decode().then(() => console.log('[Collection] Current image decoded:', index))
+            .catch((e) => console.error('[Collection] Current image decode failed:', index, e));
+        }
+      };
+      img.onerror = () => {
+        console.error('[Collection] Current image failed:', index, imageUrl,
+          `${(performance.now() - t0).toFixed(0)}ms`);
+      };
       img.src = img.dataset.src;
     }
   };
