@@ -35,6 +35,39 @@ const Collection = ({ onBack }) => {
     });
   }, [currentIndex, photos]);
 
+  // ===== 绝对防御：安全播放视频（可见性+网络状态守卫+静默 AbortError） =====
+  const safePlayVideo = (index, video, lockKey) => {
+    // 守卫1：必须是当前激活可视卡片
+    if (index !== currentIndexRef.current) return false;
+    // 守卫2：视频对象存在且未处于错误状态
+    if (!video || video.error || video.networkState === 3) return false;
+    if (video.networkState === 0) return false; // NETWORK_EMPTY: 无源
+    if (!video.paused) return false; // 已在播放
+
+    const lock = lockKey || `${index}-safe-play`;
+    if (videoPlayLocks.current[lock]) return false;
+    videoPlayLocks.current[lock] = true;
+
+    try {
+      video.play()
+        .catch((err) => {
+          // 静默忽略 AbortError（切换卡片时的预期中断），其他错误记录
+          if (err.name !== 'AbortError') {
+            console.error('[Collection Live] Play failed:', index, err);
+          }
+        })
+        .finally(() => {
+          videoPlayLocks.current[lock] = false;
+        });
+    } catch (err) {
+      videoPlayLocks.current[lock] = false;
+      if (err.name !== 'AbortError') {
+        console.error('[Collection Live] Play threw:', index, err);
+      }
+    }
+    return true;
+  };
+
   // ===== 加载照片（每张照片单独配置 chibi + comment） =====
   useEffect(() => {
     const loadedPhotos = [
@@ -240,23 +273,7 @@ const Collection = ({ onBack }) => {
     });
 
     const tryPlayIfCurrent = () => {
-      if (index === currentIndexRef.current && video.paused) {
-        const lockKey = `${index}-play`;
-        if (videoPlayLocks.current[lockKey]) return;
-        videoPlayLocks.current[lockKey] = true;
-
-        video.play()
-          .catch((err) => {
-            if (err.name === 'AbortError') {
-              console.warn('[Collection Live] Play aborted (expected during switch):', index);
-            } else {
-              console.error('[Collection Live] Play failed:', index, err);
-            }
-          })
-          .finally(() => {
-            videoPlayLocks.current[lockKey] = false;
-          });
-      }
+      safePlayVideo(index, video, `${index}-auto-play`);
     };
     addEventHandler('canplay', tryPlayIfCurrent);
     addEventHandler('loadeddata', tryPlayIfCurrent);
@@ -446,21 +463,7 @@ const Collection = ({ onBack }) => {
       if (firstPhoto && firstPhoto.isLive) {
         const firstVideo = createVideoForCard(0);
         if (firstVideo) {
-          const lockKey = '0-init-play';
-          if (!videoPlayLocks.current[lockKey]) {
-            videoPlayLocks.current[lockKey] = true;
-            firstVideo.play()
-              .catch((err) => {
-                if (err.name === 'AbortError') {
-                  console.warn('[Collection Live] Initial play aborted (expected):', err);
-                } else {
-                  console.error('[Collection Live] Initial play failed:', err);
-                }
-              })
-              .finally(() => {
-                videoPlayLocks.current[lockKey] = false;
-              });
-          }
+          safePlayVideo(0, firstVideo, '0-init-play');
         }
       }
     }, 500);
@@ -489,24 +492,7 @@ const Collection = ({ onBack }) => {
       const idx = currentIndexRef.current;
       const item = photos[idx];
       if (item && item.isLive) {
-        const v = videoRefs.current[idx];
-        if (v && v.paused) {
-          const lockKey = `${idx}-touch-play`;
-          if (!videoPlayLocks.current[lockKey]) {
-            videoPlayLocks.current[lockKey] = true;
-            v.play()
-              .catch((err) => {
-                if (err.name === 'AbortError') {
-                  console.warn('[Collection Live] Touch play aborted (expected):', err);
-                } else {
-                  console.error('[Collection Live] Touch play failed:', err);
-                }
-              })
-              .finally(() => {
-                videoPlayLocks.current[lockKey] = false;
-              });
-          }
-        }
+        safePlayVideo(idx, videoRefs.current[idx], `${idx}-touch-play`);
       }
     };
     container.addEventListener('touchstart', handleTouchPlay, { passive: true });
@@ -605,22 +591,12 @@ const Collection = ({ onBack }) => {
       if (videoPlayDebounceTimer.current) {
         clearTimeout(videoPlayDebounceTimer.current);
       }
+      const targetIndex = index;
+      const targetVideo = video;
       videoPlayDebounceTimer.current = setTimeout(() => {
-        const lockKey = `${index}-switch-play`;
-        if (!videoPlayLocks.current[lockKey]) {
-          videoPlayLocks.current[lockKey] = true;
-          video.play()
-            .catch((err) => {
-              if (err.name === 'AbortError') {
-                console.warn('[Collection Live] Switch play aborted (expected):', index, err);
-              } else {
-                console.error('[Collection Live] Switch play failed:', index, err);
-              }
-            })
-            .finally(() => {
-              videoPlayLocks.current[lockKey] = false;
-            });
-        }
+        // 防抖后再次确认该卡片仍是当前激活卡片
+        if (targetIndex !== currentIndexRef.current) return;
+        safePlayVideo(targetIndex, targetVideo, `${targetIndex}-switch-play`);
       }, 300);
     } else if (videoIndex === preloadIndex) {
       video.pause();

@@ -20,6 +20,7 @@ let birthdayPlayPromise = null;
 let birthdayPlaybackStarted = false;
 let birthdayLastError = null;
 let globalInteractionHandlerRegistered = false;
+let hasRequestedPreload = false; // 预热请求单例锁：整个应用生命周期内只真正执行一次
 
 // 首页挂载后主动 fetch 预热；成功后优先用 Blob URL 供单例 Audio 复用，
 // 避免首次点击时才开始网络下载。若用户在预热完成前点击，则中止 fetch 并
@@ -258,6 +259,12 @@ export const audioControl = {
       console.log('[audioControl] Prefetch was aborted, using original src');
       return Promise.resolve(audio);
     }
+    // 单例锁：整个应用生命周期内只真正发起一次预热请求
+    if (hasRequestedPreload) {
+      console.log('[audioControl] Preload already requested once, skipping');
+      return Promise.resolve(audio);
+    }
+    hasRequestedPreload = true;
 
     birthdayPrefetch.status = 'loading';
     markBirthdayTiming('prefetch-start');
