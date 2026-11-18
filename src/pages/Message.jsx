@@ -9,6 +9,7 @@ const Message = ({ onBack }) => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [showAudioButton, setShowAudioButton] = useState(false);
   const audioRef = useRef(null);
+  const bgmDiagRef = useRef('');
 
   const messages = [
     "今天回来的时候……",
@@ -37,6 +38,23 @@ const Message = ({ onBack }) => {
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
+
+    // ===== [MessageBgmDiag] read-only media diagnostics =====
+    const diagId = 'bgm-' + Math.random().toString(36).slice(2, 8);
+    bgmDiagRef.current = diagId;
+    const diagT0 = performance.now();
+    const diagRanges = (tr) => { const o = []; for (let i = 0; i < tr.length; i++) o.push(tr.start(i).toFixed(2) + '-' + tr.end(i).toFixed(2)); return o.join(','); };
+    const logEvt = (ev) => {
+      const me = audio.error;
+      console.log('[MessageBgmDiag]', diagId, ev, 't='+(performance.now()-diagT0).toFixed(0)+'ms',
+        'dur='+audio.duration, 'pos='+audio.currentTime.toFixed(2),
+        'rs='+audio.readyState, 'ns='+audio.networkState,
+        'paused='+audio.paused, 'ended='+audio.ended,
+        'err='+(me ? me.code+':'+me.message : 'none'),
+        'buf=['+diagRanges(audio.buffered)+']', 'seek=['+diagRanges(audio.seekable)+']');
+    };
+    ['loadstart','loadedmetadata','loadeddata','canplay','canplaythrough','play','playing','waiting','stalled','progress','pause','ended','error','suspend','abort'].forEach(ev => audio.addEventListener(ev, () => logEvt(ev)));
+    console.log('[MessageBgmDiag]', diagId, 'created', 'preload='+audio.preload, 'src='+audio.src, 't=0');
     let active = true;
 
     const updatePlayingState = () => {
@@ -74,7 +92,11 @@ const Message = ({ onBack }) => {
 
     const attemptPlay = async () => {
       try {
-        await audio.play();
+        console.log('[MessageBgmDiag]', diagId, 'play() invoked');
+        await audio.play().then(
+          () => console.log('[MessageBgmDiag]', diagId, 'play() resolved'),
+          (e) => { console.log('[MessageBgmDiag]', diagId, 'play() rejected', e && e.name); throw e; }
+        );
         if (active) setIsAudioPlaying(true);
       } catch (error) {
         console.log('[Message] Autoplay blocked, showing play button:', error.message);
@@ -84,9 +106,11 @@ const Message = ({ onBack }) => {
       }
     };
 
+    console.log('[MessageBgmDiag]', diagId, 'attemptPlay() invoked');
     attemptPlay();
 
     return () => {
+      console.log('[MessageBgmDiag]', diagId, 'cleanup/unmount');
       active = false;
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
@@ -150,7 +174,8 @@ const Message = ({ onBack }) => {
 
   const handlePlayAudio = () => {
     if (audioRef.current && audioRef.current.paused) {
-      audioRef.current.play()
+      console.log('[MessageBgmDiag]', bgmDiagRef.current, 'manual play clicked');
+            audioRef.current.play()
         .then(() => {
           setShowAudioButton(false);
         })
