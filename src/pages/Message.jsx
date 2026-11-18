@@ -20,13 +20,20 @@ const Message = ({ onBack }) => {
   useEffect(() => {
     ['/letter/message-bg.webp', '/letter/envelope.webp', '/letter/letter.webp'].forEach(src => {
       const img = new Image();
+      const t0 = performance.now();
+      img.onload = () => console.log('[MessageDiag] preload loaded:', src,
+        (performance.now() - t0).toFixed(0) + 'ms', img.naturalWidth + 'x' + img.naturalHeight);
+      img.onerror = () => console.error('[MessageDiag] preload failed:', src,
+        (performance.now() - t0).toFixed(0) + 'ms');
       img.src = src;
     });
   }, []);
 
   // 初始化音频并尝试播放
   useEffect(() => {
-    const audio = new Audio('/audio/bgm.mp3');
+    const audio = new Audio();
+    audio.preload = 'none';
+    audio.src = '/audio/bgm.mp3';
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
