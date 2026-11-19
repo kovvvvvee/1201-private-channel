@@ -10,6 +10,7 @@ const Message = ({ onBack }) => {
   const [showAudioButton, setShowAudioButton] = useState(false);
   const audioRef = useRef(null);
   const bgmDiagRef = useRef('');
+  const letterPreloadRef = useRef(false);
 
   const messages = [
     "今天回来的时候……",
@@ -17,18 +18,29 @@ const Message = ({ onBack }) => {
     "好像……是给你的。"
   ];
 
-  // 预加载背景图、信封与信纸
+  // 预加载背景图与信封；letter.webp 延迟到信封可见后预载（P1）
+  const preloadImage = (src) => {
+    const img = new Image();
+    const t0 = performance.now();
+    img.onload = () => console.log('[MessageDiag] preload loaded:', src,
+      (performance.now() - t0).toFixed(0) + 'ms', img.naturalWidth + 'x' + img.naturalHeight);
+    img.onerror = () => console.error('[MessageDiag] preload failed:', src,
+      (performance.now() - t0).toFixed(0) + 'ms');
+    img.src = src;
+  };
+
   useEffect(() => {
-    ['/letter/message-bg.webp', '/letter/envelope.webp', '/letter/letter.webp'].forEach(src => {
-      const img = new Image();
-      const t0 = performance.now();
-      img.onload = () => console.log('[MessageDiag] preload loaded:', src,
-        (performance.now() - t0).toFixed(0) + 'ms', img.naturalWidth + 'x' + img.naturalHeight);
-      img.onerror = () => console.error('[MessageDiag] preload failed:', src,
-        (performance.now() - t0).toFixed(0) + 'ms');
-      img.src = src;
-    });
+    preloadImage('/letter/message-bg.webp');
+    preloadImage('/letter/envelope.webp');
   }, []);
+
+  // 信封进入可见状态后预载信纸图；若用户快速点击，CSS background 会复用同一 URL 请求
+  useEffect(() => {
+    if (showEnvelope && !letterPreloadRef.current) {
+      letterPreloadRef.current = true;
+      preloadImage('/letter/letter.webp');
+    }
+  }, [showEnvelope]);
 
   // 初始化音频并尝试播放
   useEffect(() => {
@@ -153,6 +165,10 @@ const Message = ({ onBack }) => {
   }, []);
 
   const handleEnvelopeClick = () => {
+    if (!letterPreloadRef.current) {
+      letterPreloadRef.current = true;
+      preloadImage('/letter/letter.webp');
+    }
     setShowEnvelope(false);
     setShowLetter(true);
   };
