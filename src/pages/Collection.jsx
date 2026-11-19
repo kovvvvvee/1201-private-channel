@@ -230,7 +230,7 @@ const Collection = ({ onBack }) => {
     }
 
     const video = document.createElement('video');
-    video.preload = 'auto';
+    video.preload = (index === currentIndexRef.current) ? 'auto' : 'metadata';
     video.src = item.video;
     video.poster = item.photo;
     video.muted = true;
@@ -574,6 +574,12 @@ const Collection = ({ onBack }) => {
     if (!video) return;
 
     if (videoIndex === index) {
+      // F1: preload 卡视频转为当前卡时提升 preload 并触发取流（防抖窗口即缓冲提前量）
+      if (video.preload === 'metadata') {
+        video.preload = 'auto';
+        video.load();
+        console.log('[Collection Live] preload upgraded to auto:', videoIndex);
+      }
       // 延迟播放，等待滚动静止（防抖 300ms）
       if (videoPlayDebounceTimer.current) {
         clearTimeout(videoPlayDebounceTimer.current);
