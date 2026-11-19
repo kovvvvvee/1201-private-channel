@@ -11,6 +11,9 @@ const Message = ({ onBack }) => {
   const audioRef = useRef(null);
   const bgmDiagRef = useRef('');
   const letterPreloadRef = useRef(false);
+  const letterAttemptsRef = useRef(0);
+  const letterRetryTimerRef = useRef(null);
+  const letterMountedRef = useRef(true);
 
   const messages = [
     "今天回来的时候……",
@@ -19,15 +22,44 @@ const Message = ({ onBack }) => {
   ];
 
   // 预加载背景图与信封；letter.webp 延迟到信封可见后预载（P1）
-  const preloadImage = (src) => {
+  const preloadImage = (src, onError) => {
     const img = new Image();
     const t0 = performance.now();
     img.onload = () => console.log('[MessageDiag] preload loaded:', src,
       (performance.now() - t0).toFixed(0) + 'ms', img.naturalWidth + 'x' + img.naturalHeight);
-    img.onerror = () => console.error('[MessageDiag] preload failed:', src,
-      (performance.now() - t0).toFixed(0) + 'ms');
+    img.onerror = () => {
+      console.error('[MessageDiag] preload failed:', src,
+        (performance.now() - t0).toFixed(0) + 'ms');
+      if (onError) onError();
+    };
     img.src = src;
   };
+
+  // letter.webp 预载：首次失败 3s 后自动重试一次（R1，attempt 计数防止无限重试）
+  const startLetterPreload = () => {
+    const attempt = letterAttemptsRef.current + 1;
+    letterAttemptsRef.current = attempt;
+    console.log('[MessageDiag] letter preload attempt', attempt, 'start');
+    preloadImage('/letter/letter.webp', () => {
+      if (attempt === 1 && letterMountedRef.current) {
+        letterRetryTimerRef.current = setTimeout(() => {
+          letterRetryTimerRef.current = null;
+          console.log('[MessageDiag] letter preload retry -> attempt 2');
+          startLetterPreload();
+        }, 3000);
+      }
+    });
+  };
+
+  // 卸载时取消待执行的重试，防止过期回调
+  useEffect(() => () => {
+    letterMountedRef.current = false;
+    if (letterRetryTimerRef.current) {
+      clearTimeout(letterRetryTimerRef.current);
+      letterRetryTimerRef.current = null;
+      console.log('[MessageDiag] letter preload retry cancelled (unmount)');
+    }
+  }, []);
 
   useEffect(() => {
     preloadImage('/letter/message-bg.webp');
@@ -38,7 +70,7 @@ const Message = ({ onBack }) => {
   useEffect(() => {
     if (showEnvelope && !letterPreloadRef.current) {
       letterPreloadRef.current = true;
-      preloadImage('/letter/letter.webp');
+      startLetterPreload();
     }
   }, [showEnvelope]);
 
@@ -167,7 +199,7 @@ const Message = ({ onBack }) => {
   const handleEnvelopeClick = () => {
     if (!letterPreloadRef.current) {
       letterPreloadRef.current = true;
-      preloadImage('/letter/letter.webp');
+      startLetterPreload();
     }
     setShowEnvelope(false);
     setShowLetter(true);
