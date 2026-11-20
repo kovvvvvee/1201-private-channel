@@ -1,215 +1,248 @@
-// 每分钟限流器（基于客户端 IP）
+// 特殊通讯 AI 接口：宁波大学模型平台（OpenAI Chat Completions 兼容）
+// 会话保护：必须持有 api/auth.js 签发的 HttpOnly Cookie，否则 401
+import { getSessionFromRequest } from './auth.js';
+
+export const maxDuration = 60; // Vercel 函数最长执行时间（秒）
+
+const UPSTREAM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 55000;
+
+// 每分钟限流器（实例级；Vercel 多实例下非全局，见审计报告）
 const minuteRateLimiter = {
   requests: new Map(),
-  maxRequests: 10,      // 每分钟最多 10 次请求
-  windowMs: 60 * 1000, // 时间窗口：60 秒
-
+  maxRequests: 10,
+  windowMs: 60 * 1000,
   check(ip) {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-
-    // 清理过期记录
     for (const [clientIp, timestamps] of this.requests.entries()) {
-      const validTimestamps = timestamps.filter(t => t > windowStart);
-      if (validTimestamps.length === 0) {
-        this.requests.delete(clientIp);
-      } else {
-        this.requests.set(clientIp, validTimestamps);
-      }
+      const valid = timestamps.filter(t => t > windowStart);
+      if (valid.length === 0) this.requests.delete(clientIp);
+      else this.requests.set(clientIp, valid);
     }
-
-    // 检查当前 IP 的请求次数
-    const clientRequests = this.requests.get(ip) || [];
-    if (clientRequests.length >= this.maxRequests) {
-      return false; // 超过限制
-    }
-
-    // 记录本次请求
-    clientRequests.push(now);
-    this.requests.set(ip, clientRequests);
-    return true; // 允许请求
+    const list = this.requests.get(ip) || [];
+    if (list.length >= this.maxRequests) return false;
+    list.push(now);
+    this.requests.set(ip, list);
+    return true;
   }
 };
 
-// 每日限流器（基于客户端 IP）
 const dailyRateLimiter = {
   requests: new Map(),
-  maxRequests: 30,        // 每24小时最多 30 次请求
-  windowMs: 24 * 60 * 60 * 1000, // 时间窗口：24 小时
-
+  maxRequests: 30,
+  windowMs: 24 * 60 * 60 * 1000,
   check(ip) {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-
-    // 清理过期记录
     for (const [clientIp, timestamps] of this.requests.entries()) {
-      const validTimestamps = timestamps.filter(t => t > windowStart);
-      if (validTimestamps.length === 0) {
-        this.requests.delete(clientIp);
-      } else {
-        this.requests.set(clientIp, validTimestamps);
-      }
+      const valid = timestamps.filter(t => t > windowStart);
+      if (valid.length === 0) this.requests.delete(clientIp);
+      else this.requests.set(clientIp, valid);
     }
-
-    // 检查当前 IP 的请求次数
-    const clientRequests = this.requests.get(ip) || [];
-    if (clientRequests.length >= this.maxRequests) {
-      return false; // 超过限制
-    }
-
-    // 记录本次请求
-    clientRequests.push(now);
-    this.requests.set(ip, clientRequests);
-    return true; // 允许请求
+    const list = this.requests.get(ip) || [];
+    if (list.length >= this.maxRequests) return false;
+    list.push(now);
+    this.requests.set(ip, list);
+    return true;
   }
 };
 
-// 获取客户端 IP
 function getClientIP(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
-         req.headers['x-real-ip'] || 
-         req.connection?.remoteAddress || 
+  return req.headers['x-forwarded-for']?.split(',')[0].trim() ||
+         req.headers['x-real-ip'] ||
          'unknown';
 }
 
-export default async function handler(req, res) {
-  // CORS 配置：只允许特定来源
-  const allowedOrigins = ['https://1201-private-channel-rcw9-dun.vercel.app'];
-  const origin = req.headers.origin;
-  
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+// 解析上游 SSE：行缓冲（跨 chunk 拼接）+ 流式 UTF-8 解码
+// 返回 { content } 或 null（[DONE]/空行/无法解析）
+function createSseParser(onContent, onDone) {
+  const decoder = new TextDecoder('utf-8', { stream: true });
+  let buffer = '';
+  let finished = false;
 
-  // 处理 OPTIONS 预检请求
+  return {
+    feed(chunk) {
+      if (finished) return;
+      buffer += decoder.decode(chunk, { stream: true });
+      let idx;
+      while ((idx = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, idx).replace(/\r$/, '');
+        buffer = buffer.slice(idx + 1);
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') {
+          finished = true;
+          onDone();
+          return;
+        }
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) onContent(content);
+        } catch {
+          // 忽略非 JSON 数据行
+        }
+      }
+    },
+    flush() {
+      if (finished) return;
+      buffer += decoder.decode();
+      // 处理末尾可能残留的不完整行（尽力而为）
+      const lines = buffer.split('\n');
+      buffer = '';
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') { finished = true; onDone(); return; }
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) onContent(content);
+        } catch { /* ignore */ }
+      }
+    },
+    get finished() { return finished; }
+  };
+}
+
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
-  // 只允许 POST 请求
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 检查 API Key 是否存在
-  if (!process.env.DEEPSEEK_API_KEY) {
-    console.error('API Key 未配置');
+  // 1) 会话验证：任何上游调用之前，未登录一律 401，不消耗 AI 额度
+  const session = getSessionFromRequest(req);
+  if (!session.ok) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
+  // 2) 环境配置检查
+  const apiKey = process.env.LLM_API_KEY || process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) {
+    console.error('[api/chat] LLM_API_KEY 未配置');
     return res.status(500).json({ error: '服务配置错误' });
   }
 
-  // 频率限制（先检查每日限制，再检查每分钟限制）
+  // 3) 限流（实例级）
   const clientIP = getClientIP(req);
-  
-  // 检查每日限制
   if (!dailyRateLimiter.check(clientIP)) {
     return res.status(429).json({ error: '今日请求次数已达上限' });
   }
-  
-  // 检查每分钟限制
   if (!minuteRateLimiter.check(clientIP)) {
     return res.status(429).json({ error: '请求过于频繁，请稍后再试' });
   }
 
   try {
-    const { messages } = req.body;
+    const { messages } = req.body || {};
 
-    // 验证请求体
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: '无效的请求格式' });
     }
-
-    // 验证 messages 数组数量
-    const MAX_MESSAGES = 20;
-    if (messages.length > MAX_MESSAGES) {
+    if (messages.length > 20) {
       return res.status(400).json({ error: '消息数量超过限制' });
     }
 
-    // 验证消息长度和 role
+    const ALLOWED_ROLES = ['system', 'user', 'assistant']; // 修复：允许 system 角色卡
     const MAX_MESSAGE_LENGTH = 1000;
-    const ALLOWED_ROLES = ['user', 'assistant'];
-    
     for (const msg of messages) {
-      // 验证 role
-      if (!msg.role || !ALLOWED_ROLES.includes(msg.role)) {
+      if (!msg || !ALLOWED_ROLES.includes(msg.role)) {
         return res.status(400).json({ error: '不允许的消息类型' });
       }
-      
-      // 验证消息长度
-      if (msg.content && typeof msg.content === 'string') {
-        if (msg.content.length > MAX_MESSAGE_LENGTH) {
-          return res.status(400).json({ error: '消息长度超过限制' });
-        }
+      if (msg.content && typeof msg.content === 'string' && msg.content.length > MAX_MESSAGE_LENGTH) {
+        return res.status(400).json({ error: '消息长度超过限制' });
       }
     }
 
-    // 设置 SSE 响应头
+    // 4) SSE 响应头
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    // 调用 DeepSeek API（流式）
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    // 5) 上游调用（超时 + 客户端断开联动）
+    const baseUrl = (process.env.LLM_BASE_URL || 'https://token.nbu.edu.cn/v1').replace(/\/+$/, '');
+    const model = process.env.LLM_MODEL || 'deepseek-v4-flash';
+    let extraParams = {};
+    try {
+      extraParams = process.env.LLM_EXTRA_PARAMS ? JSON.parse(process.env.LLM_EXTRA_PARAMS) : { enable_thinking: false };
+    } catch {
+      extraParams = { enable_thinking: false };
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    res.on('close', () => controller.abort());
+
+    const upstream = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash',
-        messages: messages,
+        model,
+        messages,
         temperature: 0.8,
         stream: true,
+        ...extraParams,
       }),
+      signal: controller.signal,
     });
 
-    if (!response.ok) {
-      console.error('DeepSeek API Error Status:', response.status);
-      return res.status(500).json({ error: 'AI 服务暂时不可用' });
+    if (!upstream.ok) {
+      clearTimeout(timeout);
+      console.error('[api/chat] 上游错误状态:', upstream.status);
+      return res.status(502).json({ error: 'AI 服务暂时不可用' });
+    }
+    if (!upstream.body) {
+      clearTimeout(timeout);
+      return res.status(502).json({ error: 'AI 服务暂时不可用' });
     }
 
-    // 创建可读流
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    // 6) 流式转发：保持前端 {content} + [DONE] 契约
+    const reader = upstream.body.getReader();
+    let clientDone = false;
+    let doneSent = false;
+    res.on('close', () => { clientDone = true; });
+
+    const sendDone = () => {
+      if (!clientDone && !doneSent) {
+        doneSent = true;
+        res.write('data: [DONE]\n\n');
+      }
+    };
+
+    const parser = createSseParser(
+      (content) => { if (!clientDone) res.write(`data: ${JSON.stringify({ content })}\n\n`); },
+      sendDone
+    );
 
     try {
-      while (true) {
+      while (!parser.finished) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              res.write('data: [DONE]\n\n');
-              break;
-            }
-
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content || '';
-              if (content) {
-                res.write(`data: ${JSON.stringify({ content })}\n\n`);
-              }
-            } catch (e) {
-              // 忽略非 JSON 数据
-            }
-          }
-        }
+        parser.feed(value);
       }
-    } catch (error) {
-      console.error('Stream processing error:', error);
+      parser.flush();
+    } catch (streamErr) {
+      // 上游断流/超时/客户端断开：已写出的内容保留，干净结束
+      console.error('[api/chat] 流处理异常:', streamErr?.name || streamErr);
+    } finally {
+      clearTimeout(timeout);
+      try { reader.cancel(); } catch { /* ignore */ }
+      sendDone();
+      if (!clientDone && !res.writableEnded) {
+        res.end();
+      }
     }
 
-    res.end();
-
   } catch (error) {
-    console.error('API Error:', error.message);
-    return res.status(500).json({ error: 'AI 服务暂时不可用' });
+    console.error('[api/chat] Error:', error?.name || error);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'AI 服务暂时不可用' });
+    }
+    try { res.end(); } catch { /* ignore */ }
   }
 }
