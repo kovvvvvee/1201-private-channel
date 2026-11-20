@@ -297,68 +297,105 @@ const Collection = ({ onBack }) => {
     return video;
   };
 
-  // ===== 链式加载图片：第 i 张加载成功后触发第 i+1 张 =====
-  const loadImageWithChain = (index) => {
-    if (index >= photos.length) return;
+  // ===== 统一图片加载状态机（替代双入口） =====
+  const imageStates = useRef({});      // index -> 'loading'|'loaded'|'failed'
+  const imageWaiters = useRef({});     // index -> 完成回调队列（链式推进等）
+  const imageAttempts = useRef({});    // index -> 已发起加载次数
+  const imageRetryTimers = useRef({}); // index -> 重试定时器
 
-    const card = cardsRef.current[index];
-    const img = card && card.querySelector('.media-container img');
-    if (!img || img.getAttribute('src') || !img.dataset.src) return;
-
-    const imageUrl = img.dataset.src;
-    console.log('[Collection] Chain loading image:', index, imageUrl);
-
-    img.setAttribute('fetchpriority', 'high');
-    img.removeAttribute('loading');
-
-    // 监听加载成功，触发下一张
-    img.onload = () => {
-      console.log('[Collection] Image loaded successfully:', index, imageUrl);
-      chainLoadIndex.current = index + 1;
-      // 下一张预加载（延时 200ms 让出主线程）
-      const nextIndex = (index + 1) % photos.length;
-      if (nextIndex !== 0) { // 不循环到第一张
-        setTimeout(() => loadImageWithChain(nextIndex), 200);
-      }
-    };
-
-    img.onerror = () => {
-      console.error('[Collection] Image load failed:', index, imageUrl);
-      // 失败也继续下一张（延时 200ms 让出主线程）
-      const nextIndex = (index + 1) % photos.length;
-      if (nextIndex !== 0) {
-        setTimeout(() => loadImageWithChain(nextIndex), 200);
-      }
-    };
-
-    img.src = img.dataset.src;
+  const fireImageWaiters = (index) => {
+    const list = imageWaiters.current[index];
+    if (list && list.length) {
+      list.forEach((cb) => { try { cb(); } catch (e) {} });
+    }
+    delete imageWaiters.current[index];
   };
 
-  // ===== 按需加载当前卡片图片（链式加载） =====
-  const loadCurrentImage = (index) => {
+  const scheduleChainNext = (index) => {
+    chainLoadIndex.current = index + 1;
+    const nextIndex = (index + 1) % photos.length;
+    if (nextIndex !== 0) {
+      setTimeout(() => loadImageWithChain(nextIndex), 200);
+    }
+  };
+
+  // 唯一图片加载入口。current=true 表示当前可见卡（失败可 3s 重试一次）
+  const ensureImage = (index, current = false, onDone = null) => {
     const card = cardsRef.current[index];
     const img = card && card.querySelector('.media-container img');
-    if (img && !img.getAttribute('src') && img.dataset.src) {
-      const imageUrl = img.dataset.src;
-      const t0 = performance.now();
-      console.log('[Collection] Loading current image:', index, imageUrl);
-      img.setAttribute('fetchpriority', 'high');
-      img.removeAttribute('loading');
-      img.onload = () => {
-        console.log('[Collection] Current image loaded:', index, imageUrl,
-          `${(performance.now() - t0).toFixed(0)}ms`,
-          `${img.naturalWidth}x${img.naturalHeight}`);
-        if (img.decode) {
-          img.decode().then(() => console.log('[Collection] Current image decoded:', index))
-            .catch((e) => console.error('[Collection] Current image decode failed:', index, e));
-        }
-      };
-      img.onerror = () => {
-        console.error('[Collection] Current image failed:', index, imageUrl,
-          `${(performance.now() - t0).toFixed(0)}ms`);
-      };
-      img.src = img.dataset.src;
+    if (!img || !img.dataset.src) { if (onDone) onDone(); return null; }
+
+    const state = imageStates.current[index];
+    if (state === 'loaded') { if (onDone) onDone(); return img; }
+
+    if (state === 'failed') {
+      if (current && (imageAttempts.current[index] || 0) < 2 && !imageRetryTimers.current[index]) {
+        imageRetryTimers.current[index] = setTimeout(() => {
+          delete imageRetryTimers.current[index];
+          if (index !== currentIndexRef.current) return;
+          if (imageStates.current[index] !== 'failed') return;
+          imageStates.current[index] = 'idle';
+          ensureImage(index, true);
+        }, 3000);
+      }
+      return img;
     }
+
+    if (onDone) (imageWaiters.current[index] = imageWaiters.current[index] || []).push(onDone);
+    if (current) img.setAttribute('fetchpriority', 'high');
+    img.removeAttribute('loading');
+
+    if (state === 'loading') return img; // 在途：不重复请求，回调已登记
+
+    // idle -> loading：唯一 handler
+    imageStates.current[index] = 'loading';
+    imageAttempts.current[index] = (imageAttempts.current[index] || 0) + 1;
+    const attempt = imageAttempts.current[index];
+    const t0 = performance.now();
+    const imageUrl = img.dataset.src;
+
+    img.onload = () => {
+      imageStates.current[index] = 'loaded';
+      console.log('[Collection] Image loaded:', index, imageUrl,
+        `${(performance.now() - t0).toFixed(0)}ms`,
+        `${img.naturalWidth}x${img.naturalHeight}`);
+      fireImageWaiters(index);
+    };
+    img.onerror = () => {
+      imageStates.current[index] = 'failed';
+      console.error('[Collection] Image failed:', index, imageUrl,
+        `${(performance.now() - t0).toFixed(0)}ms`, 'attempt', attempt);
+      fireImageWaiters(index);
+      // 当前可见卡失败 -> 3s 后自动重试一次（attempts<2 => 最多 2 次请求）
+      if (index === currentIndexRef.current && (imageAttempts.current[index] || 0) < 2 && !imageRetryTimers.current[index]) {
+        imageRetryTimers.current[index] = setTimeout(() => {
+          delete imageRetryTimers.current[index];
+          if (index !== currentIndexRef.current) return;
+          if (imageStates.current[index] !== 'failed') return;
+          imageStates.current[index] = 'idle';
+          ensureImage(index, true);
+        }, 3000);
+      }
+    };
+    img.src = img.dataset.src;
+    console.log('[Collection] Loading image:', index, imageUrl, 'attempt', attempt);
+    return img;
+  };
+
+  // 链式驱动：loading 挂 waiter 等终态，终态立即推进（200ms 节奏不变）
+  const loadImageWithChain = (index) => {
+    if (index >= photos.length) return;
+    const card = cardsRef.current[index];
+    const img = card && card.querySelector('.media-container img');
+    if (!img || !img.dataset.src) { scheduleChainNext(index); return; }
+    const st = imageStates.current[index];
+    if (st === 'loaded' || st === 'failed') { scheduleChainNext(index); return; }
+    ensureImage(index, false, () => scheduleChainNext(index));
+  };
+
+  // 当前卡：优先加载；failed 态由 ensureImage 内部调度重试
+  const loadCurrentImage = (index) => {
+    ensureImage(index, true);
   };
 
   // ===== 初始化卡片堆叠（使用 video 实况） =====
@@ -497,6 +534,11 @@ const Collection = ({ onBack }) => {
   container.removeEventListener('touchend', handleTouchEnd);
   container.removeEventListener('touchstart', handleTouchPlay);
 
+  Object.keys(imageRetryTimers.current).forEach((k) => clearTimeout(imageRetryTimers.current[k]));
+  imageRetryTimers.current = {};
+  imageWaiters.current = {};
+  imageStates.current = {};
+  imageAttempts.current = {};
   cardsRef.current = [];
 };
   }, [photos]);
