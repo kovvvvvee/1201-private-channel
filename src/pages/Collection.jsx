@@ -574,12 +574,6 @@ const Collection = ({ onBack }) => {
     if (!video) return;
 
     if (videoIndex === index) {
-      // F1: preload 卡视频转为当前卡时提升 preload 并触发取流（防抖窗口即缓冲提前量）
-      if (video.preload === 'metadata') {
-        video.preload = 'auto';
-        video.load();
-        console.log('[Collection Live] preload upgraded to auto:', videoIndex);
-      }
       // 延迟播放，等待滚动静止（防抖 300ms）
       if (videoPlayDebounceTimer.current) {
         clearTimeout(videoPlayDebounceTimer.current);
@@ -589,6 +583,12 @@ const Collection = ({ onBack }) => {
       videoPlayDebounceTimer.current = setTimeout(() => {
         // 防抖后再次确认该卡片仍是当前激活卡片
         if (targetIndex !== currentIndexRef.current) return;
+        // F1+P2: 仅停留卡才升级 preload 取流；快速滑过的卡片不产生视频下载
+        if (targetVideo.preload === 'metadata') {
+          targetVideo.preload = 'auto';
+          targetVideo.load();
+          console.log('[Collection Live] preload upgraded to auto:', targetIndex);
+        }
         safePlayVideo(targetIndex, targetVideo, `${targetIndex}-switch-play`);
       }, 300);
     } else if (videoIndex === preloadIndex) {
