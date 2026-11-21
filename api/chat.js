@@ -138,12 +138,13 @@ export default async function handler(req, res) {
     }
 
     const ALLOWED_ROLES = ['system', 'user', 'assistant']; // 修复：允许 system 角色卡
-    const MAX_MESSAGE_LENGTH = 1000;
+    // system 角色卡（角色设定）远长于普通消息，单独放宽上限
+    const MAX_MESSAGE_LENGTH = { system: 20000, user: 1000, assistant: 1000 };
     for (const msg of messages) {
       if (!msg || !ALLOWED_ROLES.includes(msg.role)) {
         return res.status(400).json({ error: '不允许的消息类型' });
       }
-      if (msg.content && typeof msg.content === 'string' && msg.content.length > MAX_MESSAGE_LENGTH) {
+      if (msg.content && typeof msg.content === 'string' && msg.content.length > MAX_MESSAGE_LENGTH[msg.role]) {
         return res.status(400).json({ error: '消息长度超过限制' });
       }
     }
