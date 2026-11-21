@@ -232,7 +232,14 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    console.error('[api/chat] Error:', error?.name || error);
+    // 诊断增强：记录网络层真实原因（cause.code/message），过滤敏感信息
+    const sanitize = (v) => String(v ?? '')
+      .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
+      .replace(/sk-[A-Za-z0-9_-]+/g, '[REDACTED]')
+      .replaceAll(apiKey, '[REDACTED]');
+    console.error('[api/chat] Error:', sanitize(error?.name || typeof error),
+      '|', sanitize(error?.message),
+      '| cause:', sanitize(error?.cause?.code), sanitize(error?.cause?.message));
     if (!res.headersSent) {
       return res.status(500).json({ error: 'AI 服务暂时不可用' });
     }
