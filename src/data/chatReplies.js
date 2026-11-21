@@ -10,13 +10,8 @@ export const chatReplies = [
   ["嗯，明白了。"]
 ];
 
-// 特殊阶段的追加内容
-export const specialStage8 = "时间好像过得有点快……";
-export const specialStage10 = "剩下的不多了呢……";
-
 // 第12轮结局
 export const endingMessages = [
-  "特殊通讯权限即将结束。",
   "今天很开心。",
   "生日快乐。",
   "我在。"

@@ -459,28 +459,6 @@ const addNextSentence = () => {
 // 特殊阶段检查（不依赖句子发送完成）
 const checkSpecialStages = (count) => {
   if (!isMountedRef.current) return;
-  
-  // 第8轮追加
-  if (count === 12 - 8 && !endingTriggered) {
-    setTimeout(() => {
-      if (isMountedRef.current) {
-        const extraMsg = { text: '时间好像过得有点快……', type: 'ai' };
-        setMessages((prev) => [...prev, extraMsg]);
-        storage.addMessage(extraMsg);
-      }
-    }, 600);
-  }
-
-  // 第10轮追加
-  if (count === 12 - 10 && !endingTriggered) {
-    setTimeout(() => {
-      if (isMountedRef.current) {
-        const extraMsg = { text: '剩下的不多了呢。', type: 'ai' };
-        setMessages((prev) => [...prev, extraMsg]);
-        storage.addMessage(extraMsg);
-      }
-    }, 800);
-  }
 
   // 第12轮触发结局
   if (count === 0 && !endingTriggered) {

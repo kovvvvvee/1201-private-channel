@@ -1,4 +1,4 @@
-import { chatReplies, specialStage8, specialStage10, endingMessages } from '../data/chatReplies';
+import { chatReplies, endingMessages } from '../data/chatReplies';
 
 // 聊天逻辑管理
 export const chatLogic = {
@@ -8,19 +8,7 @@ export const chatLogic = {
   // 生成AI回复
   generateResponse: (currentCount, endingTriggered = false) => {
     const baseIndex = Math.min(12 - currentCount - 1, chatReplies.length - 1);
-    let result = [...chatReplies[baseIndex]];
-
-    // 第8轮追加（剩余4次时）
-    if (currentCount === 4) {
-      result.push(specialStage8);
-    }
-
-    // 第10轮追加（剩余2次时）
-    if (currentCount === 2) {
-      result.push(specialStage10);
-    }
-
-    return result;
+    return [...chatReplies[baseIndex]];
   },
 
   // 检查是否应该触发结局
