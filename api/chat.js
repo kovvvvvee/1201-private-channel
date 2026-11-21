@@ -157,11 +157,17 @@ export default async function handler(req, res) {
     // 5) 上游调用（超时 + 客户端断开联动）
     const baseUrl = (process.env.LLM_BASE_URL || 'https://token.nbu.edu.cn/v1').replace(/\/+$/, '');
     const model = process.env.LLM_MODEL || 'deepseek-v4-flash';
-    let extraParams = {};
+    // 平台专属参数默认值；LLM_EXTRA_PARAMS(JSON) 可整体覆盖
+    const defaultExtra = baseUrl.includes('deepseek.com')
+      ? { thinking: { type: 'disabled' } }   // DeepSeek 官方：非思考模式
+      : baseUrl.includes('nbu.edu.cn')
+        ? { enable_thinking: false }         // 宁波大学平台
+        : {};
+    let extraParams = defaultExtra;
     try {
-      extraParams = process.env.LLM_EXTRA_PARAMS ? JSON.parse(process.env.LLM_EXTRA_PARAMS) : { enable_thinking: false };
+      if (process.env.LLM_EXTRA_PARAMS) extraParams = JSON.parse(process.env.LLM_EXTRA_PARAMS);
     } catch {
-      extraParams = { enable_thinking: false };
+      extraParams = defaultExtra;
     }
 
     const controller = new AbortController();
