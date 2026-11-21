@@ -620,6 +620,16 @@ addNextSentence();
           <div className="channel-closing">频道关闭中...</div>
         )}
       </div>
+      {chatCount <= 0 && !isChannelClosed && !isClosing && (
+        <div className="readonly-notice">
+          <p>通讯额度已用完，当前仅支持查看历史记录</p>
+          <div className="export-actions">
+            <button className="closed-button export-btn" onClick={() => handleExport('txt')}>导出 TXT</button>
+            <button className="closed-button export-btn" onClick={() => handleExport('json')}>导出 JSON</button>
+          </div>
+          {exportStatus && <p className="export-status">{exportStatus}</p>}
+        </div>
+      )}
       <div className="chat-input-area">
         <input
           type="text"
