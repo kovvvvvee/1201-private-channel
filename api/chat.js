@@ -1,7 +1,5 @@
 // 特殊通讯 AI 接口：宁波大学模型平台（OpenAI Chat Completions 兼容）
-// 会话保护：必须持有 api/auth.js 签发的 HttpOnly Cookie，否则 401
-import { getSessionFromRequest } from './auth.js';
-
+// API Key 仅存于服务端环境变量 LLM_API_KEY，不出现在前端
 export const maxDuration = 60; // Vercel 函数最长执行时间（秒）
 
 const UPSTREAM_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 55000;
@@ -113,13 +111,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 1) 会话验证：任何上游调用之前，未登录一律 401，不消耗 AI 额度
-  const session = getSessionFromRequest(req);
-  if (!session.ok) {
-    return res.status(401).json({ error: 'unauthorized' });
-  }
-
-  // 2) 环境配置检查：仅允许 LLM_API_KEY（学校平台），禁止回退旧 DeepSeek Key
+  // 1) 环境配置检查：仅允许 LLM_API_KEY（学校平台），禁止回退旧 DeepSeek Key
   const apiKey = (process.env.LLM_API_KEY || '').trim();
   if (!apiKey) {
     console.error('[api/chat] LLM_API_KEY 未配置');

@@ -18,11 +18,6 @@ const Chat = ({ onBack }) => {
   const endingProcessedRef = useRef(false);
   const isRequestingRef = useRef(false);
   const isMountedRef = useRef(true);
-  // ===== 访问口令会话 =====
-  const [authState, setAuthState] = useState('checking'); // checking | authed | locked
-  const [authPassword, setAuthPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
 
   // 加载保存的频道状态
   useEffect(() => {
@@ -42,39 +37,6 @@ const Chat = ({ onBack }) => {
       isMountedRef.current = false;
     };
   }, []);
-
-  // ===== 会话状态检查（不触发 AI 请求） =====
-  useEffect(() => {
-    fetch('/api/auth', { credentials: 'same-origin' })
-      .then((r) => r.json())
-      .then((d) => { if (isMountedRef.current) setAuthState(d.authenticated ? 'authed' : 'locked'); })
-      .catch(() => { if (isMountedRef.current) setAuthState('locked'); });
-  }, []);
-
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
-    if (authLoading || !authPassword) return;
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ password: authPassword }),
-      });
-      if (res.ok) {
-        setAuthState('authed');
-        setAuthPassword('');
-      } else {
-        setAuthError('口令不正确，请重试');
-      }
-    } catch {
-      setAuthError('连接失败，请稍后重试');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   // 自动滚动到底部
   useEffect(() => {
@@ -948,7 +910,7 @@ const Chat = ({ onBack }) => {
 
   // ===== 发送消息 =====
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || chatCount <= 0 || isChannelClosed || isLoading || isRequestingRef.current || authState !== 'authed') return;
+    if (!inputValue.trim() || chatCount <= 0 || isChannelClosed || isLoading || isRequestingRef.current) return;
 
     isRequestingRef.current = true;
     const userMessage = inputValue.trim();
@@ -982,10 +944,6 @@ const Chat = ({ onBack }) => {
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          setAuthState('locked'); // 会话过期，重新要求口令
-          throw new Error('unauthorized');
-        }
         throw new Error(`API 请求失败: ${response.status}`);
       }
 
@@ -1271,33 +1229,6 @@ addNextSentence();
           {isLoading ? '发送中...' : '发送'}
         </button>
       </div>
-      {/* ===== 访问口令门禁 ===== */}
-      {authState === 'locked' && (
-        <div className="closed-modal visible">
-          <div className="closed-content">
-            <h2>🔒 频道访问验证</h2>
-            <p>请输入访问口令</p>
-            <form onSubmit={handleAuthSubmit}>
-              <input
-                type="password"
-                className="chat-input"
-                style={{ width: '100%', marginBottom: '16px' }}
-                placeholder="访问口令"
-                value={authPassword}
-                onChange={(e) => setAuthPassword(e.target.value)}
-                autoFocus
-                autoComplete="off"
-              />
-              {authError && (
-                <p style={{ color: '#c0392b', marginBottom: '12px', fontSize: '14px' }}>{authError}</p>
-              )}
-              <button type="submit" className="closed-button" disabled={authLoading || !authPassword}>
-                {authLoading ? '验证中...' : '进入'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
