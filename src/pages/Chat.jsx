@@ -284,13 +284,18 @@ const Chat = ({ onBack }) => {
 
     try {
       // 构建消息历史（用于 API）
-      const apiMessages = [
-        { role: 'system', content: systemPrompt },
+      // AI 回复会被拆分为多条短句分别持久化，历史增长很快；
+      // 仅裁剪发给 API 的上下文（system + 最近19条，总数≤20），本地记录不受影响
+      const conversationMessages = [
         ...messages.map(msg => ({
           role: msg.type === 'user' ? 'user' : 'assistant',
           content: msg.text
         })),
         { role: 'user', content: userMessage }
+      ];
+      const apiMessages = [
+        { role: 'system', content: systemPrompt },
+        ...conversationMessages.slice(-19)
       ];
 
       // 调用后端 API
