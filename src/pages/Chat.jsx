@@ -10,11 +10,9 @@ const Chat = ({ onBack }) => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isChannelClosed, setIsChannelClosed] = useState(storage.isChannelClosed());
-  const [showClosedModal, setShowClosedModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [endingTriggered, setEndingTriggered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [exportStatus, setExportStatus] = useState('');
   const chatAreaRef = useRef(null);
   const endingProcessedRef = useRef(false);
   const isRequestingRef = useRef(false);
@@ -29,10 +27,6 @@ const Chat = ({ onBack }) => {
     setMessages(savedState.messages || []);
     setIsChannelClosed(savedState.closed);
     setEndingTriggered(savedState.endingTriggered);
-
-    if (savedState.closed) {
-      setShowClosedModal(true);
-    }
 
     return () => {
       isMountedRef.current = false;
@@ -500,52 +494,6 @@ addNextSentence();
     }
   };
 
-  const handleCloseModal = () => {
-    setShowClosedModal(false);
-    onBack();
-  };
-
-  // ===== 导出聊天记录（只读 localStorage，不修改任何频道数据）=====
-  const handleExport = (format) => {
-    try {
-      const msgs = storage.getMessages();
-      if (!msgs || msgs.length === 0) {
-        setExportStatus('暂无聊天记录');
-        return;
-      }
-      const now = new Date();
-      const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-      let content, mime, ext;
-      if (format === 'json') {
-        content = JSON.stringify(msgs, null, 2);
-        mime = 'application/json';
-        ext = 'json';
-      } else {
-        const lines = ['1201 私人频道 · 聊天记录', ''];
-        msgs.forEach((m) => {
-          const who = m.type === 'user' ? '我' : '沈星回';
-          lines.push(`${who}：${m.text}`);
-        });
-        content = lines.join('\n');
-        mime = 'text/plain';
-        ext = 'txt';
-      }
-      const blob = new Blob([content], { type: `${mime};charset=utf-8` });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `1201-聊天记录-${ymd}.${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setExportStatus('已导出');
-    } catch (e) {
-      console.error('导出失败:', e);
-      setExportStatus('导出失败，请重试');
-    }
-  };
-
   // ===== 频道关闭状态 =====
   if (isChannelClosed && !isClosing) {
     return (
@@ -574,20 +522,9 @@ addNextSentence();
           />
           <button className="send-button" disabled>发送</button>
         </div>
-        {showClosedModal && (
-          <div className="closed-modal visible">
-            <div className="closed-content">
-              <h2>📡 频道已关闭</h2>
-              <p>特殊通讯权限已结束</p>
-              <div className="export-actions">
-                <button className="closed-button export-btn" onClick={() => handleExport('txt')}>导出 TXT</button>
-                <button className="closed-button export-btn" onClick={() => handleExport('json')}>导出 JSON</button>
-              </div>
-              {exportStatus && <p className="export-status">{exportStatus}</p>}
-              <button className="closed-button" onClick={handleCloseModal}>确定</button>
-            </div>
-          </div>
-        )}
+        <div className="readonly-notice">
+          <p>特殊通讯已结束，历史消息仍可查看</p>
+        </div>
       </div>
     );
   }
@@ -623,11 +560,6 @@ addNextSentence();
       {chatCount <= 0 && !isChannelClosed && !isClosing && (
         <div className="readonly-notice">
           <p>通讯额度已用完，当前仅支持查看历史记录</p>
-          <div className="export-actions">
-            <button className="closed-button export-btn" onClick={() => handleExport('txt')}>导出 TXT</button>
-            <button className="closed-button export-btn" onClick={() => handleExport('json')}>导出 JSON</button>
-          </div>
-          {exportStatus && <p className="export-status">{exportStatus}</p>}
         </div>
       )}
       <div className="chat-input-area">
