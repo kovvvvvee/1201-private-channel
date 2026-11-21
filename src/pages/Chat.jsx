@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { storage } from '../utils/storage';
 import { chatLogic } from '../utils/chatLogic';
+import { buildTimeContext } from '../utils/timeContext';
 import ChatBubble from '../components/ChatBubble';
 import '../styles/chat.css';
 import '../styles/chatBubble.css';
@@ -349,7 +350,7 @@ const Chat = ({ onBack }) => {
     try {
       // 构建消息历史（用于 API）
       // AI 回复会被拆分为多条短句分别持久化，历史增长很快；
-      // 仅裁剪发给 API 的上下文（system + 最近19条，总数≤20），本地记录不受影响
+      // 仅裁剪发给 API 的上下文（system + 时间上下文 + 最近18条，总数≤20），本地记录不受影响
       const conversationMessages = [
         ...messages.map(msg => ({
           role: msg.type === 'user' ? 'user' : 'assistant',
@@ -359,7 +360,8 @@ const Chat = ({ onBack }) => {
       ];
       const apiMessages = [
         { role: 'system', content: systemPrompt },
-        ...conversationMessages.slice(-19)
+        { role: 'system', content: buildTimeContext() },
+        ...conversationMessages.slice(-18)
       ];
 
       // 调用后端 API
