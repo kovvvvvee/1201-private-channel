@@ -584,7 +584,7 @@ addNextSentence();
         <div className="chat-title">
           <span>沈星回</span>
         </div>
-        <div className={`remaining-badge ${chatCount < 12 ? 'blinking' : ''}`}>
+        <div className={`remaining-badge ${chatCount < chatLogic.INITIAL_COUNT ? 'blinking' : ''}`}>
           📡 {chatCount}
         </div>
       </div>

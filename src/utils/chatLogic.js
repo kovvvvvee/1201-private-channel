@@ -1,13 +1,15 @@
 import { chatReplies, endingMessages } from '../data/chatReplies';
 
+const INITIAL_COUNT = 24;
+
 // 聊天逻辑管理
 export const chatLogic = {
   // 初始次数
-  INITIAL_COUNT: 12,
+  INITIAL_COUNT,
 
   // 生成AI回复
   generateResponse: (currentCount, endingTriggered = false) => {
-    const baseIndex = Math.min(12 - currentCount - 1, chatReplies.length - 1);
+    const baseIndex = Math.min(INITIAL_COUNT - currentCount - 1, chatReplies.length - 1);
     return [...chatReplies[baseIndex]];
   },
 

@@ -9,7 +9,7 @@ const initializeChannelState = () => {
   if (!existing) {
     const initialState = {
       channelId: '1201',
-      remainCount: 12,
+      remainCount: 24,
       closed: false,
       endingTriggered: false,
       messages: []
