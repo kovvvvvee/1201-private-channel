@@ -224,6 +224,26 @@
   cursor: pointer;
 }
 
+/* ===== 聊天记录导出 ===== */
+.export-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.export-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.export-status {
+  color: var(--text-dark);
+  font-size: 13px;
+  margin-bottom: 12px;
+  min-height: 18px;
+}
+
 .channel-closing {
   text-align: center;
   color: var(--primary-purple);

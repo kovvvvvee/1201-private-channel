@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { storage } from '../utils/storage';
 import { audioControl } from '../utils/audioControl';
 import Character from '../components/Character';
 import BottomNav from '../components/BottomNav';
@@ -47,12 +46,7 @@ const Home = ({ onNavigate }) => {
   };
 
   const handleNavigate = (page) => {
-    // 检查频道关闭状态
-    if (page === 'chat' && storage.isChannelClosed()) {
-      // 不允许进入聊天页面，显示提示
-      alert('📡 频道已关闭');
-      return;
-    }
+    // 频道关闭后仍允许进入聊天页查看历史记录（页面为只读关闭状态）
     onNavigate(page);
   };
 

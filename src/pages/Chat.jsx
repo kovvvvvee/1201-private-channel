@@ -14,6 +14,7 @@ const Chat = ({ onBack }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [endingTriggered, setEndingTriggered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [exportStatus, setExportStatus] = useState('');
   const chatAreaRef = useRef(null);
   const endingProcessedRef = useRef(false);
   const isRequestingRef = useRef(false);
@@ -504,6 +505,47 @@ addNextSentence();
     onBack();
   };
 
+  // ===== 导出聊天记录（只读 localStorage，不修改任何频道数据）=====
+  const handleExport = (format) => {
+    try {
+      const msgs = storage.getMessages();
+      if (!msgs || msgs.length === 0) {
+        setExportStatus('暂无聊天记录');
+        return;
+      }
+      const now = new Date();
+      const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+      let content, mime, ext;
+      if (format === 'json') {
+        content = JSON.stringify(msgs, null, 2);
+        mime = 'application/json';
+        ext = 'json';
+      } else {
+        const lines = ['1201 私人频道 · 聊天记录', ''];
+        msgs.forEach((m) => {
+          const who = m.type === 'user' ? '我' : '沈星回';
+          lines.push(`${who}：${m.text}`);
+        });
+        content = lines.join('\n');
+        mime = 'text/plain';
+        ext = 'txt';
+      }
+      const blob = new Blob([content], { type: `${mime};charset=utf-8` });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `1201-聊天记录-${ymd}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportStatus('已导出');
+    } catch (e) {
+      console.error('导出失败:', e);
+      setExportStatus('导出失败，请重试');
+    }
+  };
+
   // ===== 频道关闭状态 =====
   if (isChannelClosed && !isClosing) {
     return (
@@ -537,6 +579,11 @@ addNextSentence();
             <div className="closed-content">
               <h2>📡 频道已关闭</h2>
               <p>特殊通讯权限已结束</p>
+              <div className="export-actions">
+                <button className="closed-button export-btn" onClick={() => handleExport('txt')}>导出 TXT</button>
+                <button className="closed-button export-btn" onClick={() => handleExport('json')}>导出 JSON</button>
+              </div>
+              {exportStatus && <p className="export-status">{exportStatus}</p>}
               <button className="closed-button" onClick={handleCloseModal}>确定</button>
             </div>
           </div>
