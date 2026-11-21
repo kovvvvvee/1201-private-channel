@@ -119,8 +119,8 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'unauthorized' });
   }
 
-  // 2) 环境配置检查
-  const apiKey = process.env.LLM_API_KEY || process.env.DEEPSEEK_API_KEY;
+  // 2) 环境配置检查：仅允许 LLM_API_KEY（学校平台），禁止回退旧 DeepSeek Key
+  const apiKey = (process.env.LLM_API_KEY || '').trim();
   if (!apiKey) {
     console.error('[api/chat] LLM_API_KEY 未配置');
     return res.status(500).json({ error: '服务配置错误' });
